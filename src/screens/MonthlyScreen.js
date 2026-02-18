@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { View, Text, FlatList, SafeAreaView } from 'react-native';
+import { View, Text, FlatList } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import useExpenseStore from '../context/useExpenseStore';
 import { formatCurrency, formatMonth } from '../utils/format';
 

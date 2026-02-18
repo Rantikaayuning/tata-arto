@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, SafeAreaView, ScrollView, Modal, FlatList } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView, Modal, FlatList } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import useExpenseStore from '../context/useExpenseStore';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -7,14 +8,19 @@ import { formatNumberWithDots, parseNumberFromDots, formatDate } from '../utils/
 
 const AddExpenseScreen = ({ navigation, route }) => {
     const addExpense = useExpenseStore((state) => state.addExpense);
-    const categories = useExpenseStore((state) => state.categories);
+    const categories = useExpenseStore((state) => state.categories) || [];
+    const wallets = useExpenseStore((state) => state.wallets) || [];
     const addCategory = useExpenseStore((state) => state.addCategory);
 
     const initialType = route.params?.initialType || 'expense';
 
     const [type, setType] = useState(initialType);
     const [amount, setAmount] = useState('');
+
+    // Two selections: Source (Wallet) and Category (Type)
+    const [selectedWallet, setSelectedWallet] = useState(null);
     const [selectedCategory, setSelectedCategory] = useState(null);
+
     const [note, setNote] = useState('');
     const [date, setDate] = useState(new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
@@ -24,18 +30,17 @@ const AddExpenseScreen = ({ navigation, route }) => {
     const [newCategoryName, setNewCategoryName] = useState('');
     const [newCategoryIcon, setNewCategoryIcon] = useState('star');
 
-    // Logic: 
-    // If Type == Expense: Show only 'expense' categories relative to logic
-    // If Type == Income: Show 'income' categories AND 'expense' categories (as Pockets to fill)
-    // Let's create two sections for Income: "Sources" (Gaji, Bonus) and "Pockets" (Makan, Bensin...)
-
-    const incomeSources = categories.filter(c => c.type === 'income');
+    // Filter categories based on type
+    const incomeCategories = categories.filter(c => c.type === 'income');
     const expenseCategories = categories.filter(c => c.type === 'expense');
 
     useEffect(() => {
-        // Reset selection when type changes to prevent mismatch
+        // Reset category when type changes (Wallet selection can persist)
         setSelectedCategory(null);
-    }, [type]);
+        if (wallets.length > 0 && !selectedWallet) {
+            setSelectedWallet(wallets[0]); // Default to first wallet
+        }
+    }, [type, wallets]);
 
     const handleAmountChange = (text) => {
         const cleanText = text.replace(/[^0-9]/g, '');
@@ -46,13 +51,22 @@ const AddExpenseScreen = ({ navigation, route }) => {
     const handleSubmit = () => {
         const numericAmount = parseNumberFromDots(amount);
 
-        if (!numericAmount || !selectedCategory) {
-            Alert.alert('Error', 'Mohon isi jumlah dan pilih kategori');
+        if (!numericAmount) {
+            Alert.alert('Error', 'Mohon isi jumlah nominal');
+            return;
+        }
+        if (!selectedWallet) {
+            Alert.alert('Error', 'Mohon pilih dompet');
+            return;
+        }
+        if (!selectedCategory) {
+            Alert.alert('Error', 'Mohon pilih kategori');
             return;
         }
 
         addExpense({
             amount: numericAmount,
+            wallet: selectedWallet,
             category: selectedCategory,
             note,
             date: date.toISOString(),
@@ -104,18 +118,18 @@ const AddExpenseScreen = ({ navigation, route }) => {
         </TouchableOpacity>
     );
 
-    const renderCategoryPill = (cat) => (
+    const renderPill = (item, isSelected, onPress, colorClass) => (
         <TouchableOpacity
-            key={cat.id}
-            onPress={() => setSelectedCategory(cat)}
-            className={`mr-3 mb-3 px-4 py-2 rounded-full flex-row items-center border ${selectedCategory?.id === cat.id
-                    ? (type === 'income' ? 'bg-green-100 border-green-500' : 'bg-red-100 border-red-500')
-                    : 'bg-white border-gray-200'
+            key={item.id}
+            onPress={onPress}
+            className={`mr-3 mb-3 px-4 py-2 rounded-full flex-row items-center border ${isSelected
+                ? colorClass
+                : 'bg-white border-gray-200'
                 }`}
         >
-            <Ionicons name={cat.icon || 'help'} size={18} color={selectedCategory?.id === cat.id ? '#1F2937' : '#6B7280'} />
-            <Text className={`ml-2 font-medium ${selectedCategory?.id === cat.id ? 'text-gray-900' : 'text-gray-500'}`}>
-                {cat.name}
+            <Ionicons name={item.icon || 'help'} size={18} color={isSelected ? '#1F2937' : '#6B7280'} />
+            <Text className={`ml-2 font-medium ${isSelected ? 'text-gray-900' : 'text-gray-500'}`}>
+                {item.name}
             </Text>
         </TouchableOpacity>
     );
@@ -163,37 +177,87 @@ const AddExpenseScreen = ({ navigation, route }) => {
                     />
                 </View>
 
-                {/* Categories */}
-                <View className="mb-6">
-                    <Text className="text-gray-600 font-medium mb-3">Kategori</Text>
-                    <View className="flex-row flex-wrap">
-                        {type === 'expense' ? (
-                            // Expense Mode: Show only expense categories
-                            <>
-                                {expenseCategories.map(renderCategoryPill)}
-                            </>
-                        ) : (
-                            // Income Mode: Show Income Sources + Pockets (Expense Categories)
-                            <>
-                                <View className="w-full mb-2"><Text className="text-gray-400 text-xs font-bold uppercase tracking-wider">Sumber Dana</Text></View>
-                                {incomeSources.map(renderCategoryPill)}
+                {/* Logic Switch based on Type */}
+                {type === 'expense' ? (
+                    <>
+                        {/* 1. Select Wallet (Source) */}
+                        <View className="mb-6">
+                            <Text className="text-gray-600 font-medium mb-3">Sumber Dana (Dompet)</Text>
+                            <View className="flex-row flex-wrap">
+                                {wallets.map(wallet =>
+                                    renderPill(
+                                        wallet,
+                                        selectedWallet?.id === wallet.id,
+                                        () => setSelectedWallet(wallet),
+                                        'bg-blue-100 border-blue-500'
+                                    )
+                                )}
+                            </View>
+                        </View>
 
-                                <View className="w-full mt-4 mb-2"><Text className="text-gray-400 text-xs font-bold uppercase tracking-wider">Isi Kantong (Alokasi)</Text></View>
-                                {expenseCategories.map(renderCategoryPill)}
-                            </>
-                        )}
+                        {/* 2. Select Category (Destination) */}
+                        <View className="mb-6">
+                            <Text className="text-gray-600 font-medium mb-3">Kategori Pengeluaran</Text>
+                            <View className="flex-row flex-wrap">
+                                {expenseCategories.map(cat =>
+                                    renderPill(
+                                        cat,
+                                        selectedCategory?.id === cat.id,
+                                        () => setSelectedCategory(cat),
+                                        'bg-red-100 border-red-500'
+                                    )
+                                )}
+                                <TouchableOpacity
+                                    onPress={() => setModalVisible(true)}
+                                    className="mr-3 mb-3 px-4 py-2 rounded-full flex-row items-center border border-dashed border-gray-300 bg-gray-50"
+                                >
+                                    <Ionicons name="add" size={18} color="#6B7280" />
+                                    <Text className="ml-2 font-medium text-gray-500">Tambah</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </>
+                ) : (
+                    <>
+                        {/* 1. Select Category (Source) */}
+                        <View className="mb-6">
+                            <Text className="text-gray-600 font-medium mb-3">Sumber Pemasukan</Text>
+                            <View className="flex-row flex-wrap">
+                                {incomeCategories.map(cat =>
+                                    renderPill(
+                                        cat,
+                                        selectedCategory?.id === cat.id,
+                                        () => setSelectedCategory(cat),
+                                        'bg-green-100 border-green-500'
+                                    )
+                                )}
+                                <TouchableOpacity
+                                    onPress={() => setModalVisible(true)}
+                                    className="mr-3 mb-3 px-4 py-2 rounded-full flex-row items-center border border-dashed border-gray-300 bg-gray-50"
+                                >
+                                    <Ionicons name="add" size={18} color="#6B7280" />
+                                    <Text className="ml-2 font-medium text-gray-500">Tambah</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
 
-                        <TouchableOpacity
-                            onPress={() => setModalVisible(true)}
-                            className="mr-3 mb-3 px-4 py-2 rounded-full flex-row items-center border border-dashed border-gray-300 bg-gray-50"
-                        >
-                            <Ionicons name="add" size={18} color="#6B7280" />
-                            <Text className="ml-2 font-medium text-gray-500">Tambah</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
+                        {/* 2. Select Wallet (Destination) */}
+                        <View className="mb-6">
+                            <Text className="text-gray-600 font-medium mb-3">Masuk ke Dompet</Text>
+                            <View className="flex-row flex-wrap">
+                                {wallets.map(wallet =>
+                                    renderPill(
+                                        wallet,
+                                        selectedWallet?.id === wallet.id,
+                                        () => setSelectedWallet(wallet),
+                                        'bg-blue-100 border-blue-500'
+                                    )
+                                )}
+                            </View>
+                        </View>
+                    </>
+                )}
 
-                {/* Date/Notes omitted for brevity in thought, but included here */}
                 <View className="mb-6">
                     <Text className="text-gray-600 font-medium mb-2">Tanggal</Text>
                     <TouchableOpacity
@@ -279,7 +343,6 @@ const AddExpenseScreen = ({ navigation, route }) => {
                     </View>
                 </View>
             </Modal>
-
         </SafeAreaView>
     );
 };

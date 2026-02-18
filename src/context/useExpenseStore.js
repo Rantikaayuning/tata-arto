@@ -6,13 +6,29 @@ const useExpenseStore = create(
     persist(
         (set, get) => ({
             expenses: [],
-            categories: [
-                { id: '1', name: 'Utama', icon: 'wallet', type: 'expense' }, // Default main pocket
-                { id: '2', name: 'Gaji', icon: 'briefcase', type: 'income' },
-                { id: '3', name: 'Bonus', icon: 'gift', type: 'income' },
-                { id: '4', name: 'Investasi', icon: 'trending-up', type: 'income' },
-                // Other pockets will be added by user
+            wallets: [
+                { id: '1', name: 'Dompet Utama', icon: 'wallet', type: 'wallet' }
             ],
+            categories: [
+                // Expense Categories
+                { id: 'c1', name: 'Makan & Minum', icon: 'fast-food', type: 'expense' },
+                { id: 'c2', name: 'Transportasi', icon: 'bus', type: 'expense' },
+                { id: 'c3', name: 'Belanja', icon: 'cart', type: 'expense' },
+                { id: 'c4', name: 'Tagihan', icon: 'receipt', type: 'expense' },
+                { id: 'c5', name: 'Hiburan', icon: 'game-controller', type: 'expense' },
+                { id: 'c6', name: 'Kesehatan', icon: 'medkit', type: 'expense' },
+                { id: 'c7', name: 'Pendidikan', icon: 'school', type: 'expense' },
+
+                // Income Categories
+                { id: 'inc1', name: 'Gaji', icon: 'business', type: 'income' },
+                { id: 'inc2', name: 'Bonus', icon: 'gift', type: 'income' },
+                { id: 'inc3', name: 'Investasi', icon: 'trending-up', type: 'income' },
+            ],
+            addWallet: (newWallet) => {
+                set((state) => ({
+                    wallets: [...state.wallets, newWallet],
+                }));
+            },
             addCategory: (newCategory) => {
                 set((state) => ({
                     categories: [...state.categories, newCategory],
@@ -44,20 +60,29 @@ const useExpenseStore = create(
                     return date.getMonth() === month && date.getFullYear() === year;
                 });
             },
-            resetCategories: () => {
-                // Reset to only include 'Utama' and Income sources
+            resetAll: () => {
                 set({
+                    expenses: [],
+                    wallets: [
+                        { id: '1', name: 'Dompet Utama', icon: 'wallet', type: 'wallet' }
+                    ],
                     categories: [
-                        { id: '1', name: 'Utama', icon: 'wallet', type: 'expense' },
-                        { id: '2', name: 'Gaji', icon: 'briefcase', type: 'income' },
-                        { id: '3', name: 'Bonus', icon: 'gift', type: 'income' },
-                        { id: '4', name: 'Investasi', icon: 'trending-up', type: 'income' },
+                        { id: 'c1', name: 'Makan & Minum', icon: 'fast-food', type: 'expense' },
+                        { id: 'c2', name: 'Transportasi', icon: 'bus', type: 'expense' },
+                        { id: 'c3', name: 'Belanja', icon: 'cart', type: 'expense' },
+                        { id: 'c4', name: 'Tagihan', icon: 'receipt', type: 'expense' },
+                        { id: 'c5', name: 'Hiburan', icon: 'game-controller', type: 'expense' },
+                        { id: 'c6', name: 'Kesehatan', icon: 'medkit', type: 'expense' },
+                        { id: 'c7', name: 'Pendidikan', icon: 'school', type: 'expense' },
+                        { id: 'inc1', name: 'Gaji', icon: 'business', type: 'income' },
+                        { id: 'inc2', name: 'Bonus', icon: 'gift', type: 'income' },
+                        { id: 'inc3', name: 'Investasi', icon: 'trending-up', type: 'income' },
                     ]
-                })
+                });
             }
         }),
         {
-            name: 'expense-storage',
+            name: 'expense-storage-v2', // v2 implies structural change
             storage: createJSONStorage(() => AsyncStorage),
         }
     )

@@ -3,15 +3,22 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { View } from 'react-native';
 
 import HomeScreen from '../screens/HomeScreen';
 import MonthlyScreen from '../screens/MonthlyScreen';
+import PocketDetailScreen from '../screens/PocketDetailScreen';
 import AddExpenseScreen from '../screens/AddExpenseScreen';
 import PocketsScreen from '../screens/PocketsScreen';
-import { View } from 'react-native';
+import withSwipe from '../components/withSwipe'; // Import HOC
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
+
+// Wrap screens with Swipe Logic
+const HomeScreenWithSwipe = withSwipe(HomeScreen, null, 'Pockets');
+const PocketsScreenWithSwipe = withSwipe(PocketsScreen, 'Home', 'Monthly');
+const MonthlyScreenWithSwipe = withSwipe(MonthlyScreen, 'Pockets', null);
 
 const MainTabs = () => {
     return (
@@ -49,7 +56,7 @@ const MainTabs = () => {
         >
             <Tab.Screen
                 name="Home"
-                component={HomeScreen}
+                component={HomeScreenWithSwipe}
                 options={{
                     tabBarLabel: 'Harian',
                     tabBarIcon: ({ color, size, focused }) => (
@@ -61,19 +68,19 @@ const MainTabs = () => {
             />
             <Tab.Screen
                 name="Pockets"
-                component={PocketsScreen}
+                component={PocketsScreenWithSwipe}
                 options={{
-                    tabBarLabel: 'Kantong',
+                    tabBarLabel: 'Dompet',
                     tabBarIcon: ({ color, size, focused }) => (
                         <View className={`items-center justify-center p-1 rounded-xl ${focused ? 'bg-gray-100' : ''}`}>
-                            <Ionicons name="wallet" color={color} size={size + 2} />
+                            <Ionicons name="card" color={color} size={size + 2} />
                         </View>
                     ),
                 }}
             />
             <Tab.Screen
                 name="Monthly"
-                component={MonthlyScreen}
+                component={MonthlyScreenWithSwipe}
                 options={{
                     tabBarLabel: 'Bulanan',
                     tabBarIcon: ({ color, size, focused }) => (
@@ -92,6 +99,11 @@ const AppNavigator = () => {
         <NavigationContainer>
             <Stack.Navigator screenOptions={{ headerShown: false }}>
                 <Stack.Screen name="MainTabs" component={MainTabs} />
+                <Stack.Screen
+                    name="PocketDetail"
+                    component={PocketDetailScreen}
+                    options={{ animation: 'slide_from_right' }}
+                />
                 <Stack.Screen
                     name="AddExpense"
                     component={AddExpenseScreen}
