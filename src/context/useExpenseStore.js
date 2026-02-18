@@ -7,7 +7,8 @@ const useExpenseStore = create(
         (set, get) => ({
             expenses: [],
             wallets: [
-                { id: '1', name: 'Dompet Utama', icon: 'wallet', type: 'wallet' }
+                { id: '1', name: 'Dompet Utama', icon: 'wallet', type: 'wallet' },
+                { id: '2', name: 'Cash', icon: 'cash', type: 'wallet' }
             ],
             categories: [
                 // Expense Categories
@@ -64,7 +65,8 @@ const useExpenseStore = create(
                 set({
                     expenses: [],
                     wallets: [
-                        { id: '1', name: 'Dompet Utama', icon: 'wallet', type: 'wallet' }
+                        { id: '1', name: 'Dompet Utama', icon: 'wallet', type: 'wallet' },
+                        { id: '2', name: 'Cash', icon: 'cash', type: 'wallet' }
                     ],
                     categories: [
                         { id: 'c1', name: 'Makan & Minum', icon: 'fast-food', type: 'expense' },
@@ -82,7 +84,7 @@ const useExpenseStore = create(
             }
         }),
         {
-            name: 'expense-storage-v2', // v2 implies structural change
+            name: 'expense-storage-v3', // v3 implies structural change
             storage: createJSONStorage(() => AsyncStorage),
         }
     )

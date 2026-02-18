@@ -10,7 +10,17 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 const PocketDetailScreen = () => {
     const route = useRoute();
     const navigation = useNavigation();
-    const { wallet } = route.params; // Expect wallet object
+    const { wallet } = route.params || {};
+
+    if (!wallet) {
+        return (
+            <SafeAreaView className="flex-1 bg-white justify-center items-center">
+                <TouchableOpacity onPress={() => navigation.goBack()} className="p-4 bg-gray-100 rounded-lg">
+                    <Text className="text-gray-500">Kembali</Text>
+                </TouchableOpacity>
+            </SafeAreaView>
+        );
+    }
 
     const expenses = useExpenseStore((state) => state.expenses) || [];
 
@@ -49,7 +59,7 @@ const PocketDetailScreen = () => {
 
             <View className="flex-1">
                 {/* Summary Card */}
-                <View className="mx-4 mt-6 mb-2 p-5 bg-primary rounded-3xl shadow-lg shadow-green-900/10">
+                <View className="mx-4 mt-6 mb-2 p-5 bg-primary rounded-2xl shadow-lg shadow-green-900/10">
                     <Text className="text-green-50 text-sm font-medium mb-1">Saldo Saat Ini</Text>
                     <Text className="text-3xl font-bold text-white tracking-tight">
                         {formatCurrency(currentBalance)}

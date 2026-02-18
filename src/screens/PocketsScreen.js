@@ -42,12 +42,17 @@ const PocketsScreen = () => {
             return 0;
         });
 
-        // Insert 'Add Wallet' card at the second position
-        const withAddButton = [...sorted];
-        withAddButton.splice(1, 0, { id: 'add-new-button', isAddButton: true });
+        // Insert 'Add Wallet' card at the end
+        const withAddButton = [...sorted, { id: 'add-new-button', isAddButton: true }];
 
         return withAddButton;
     }, [expenses, wallets]);
+
+    const totalAssets = useMemo(() => {
+        return walletsList
+            .filter(item => !item.isAddButton)
+            .reduce((sum, item) => sum + (item.balance || 0), 0);
+    }, [walletsList]);
 
     const handleAddWallet = () => {
         if (!newWalletName.trim()) {
@@ -119,7 +124,7 @@ const PocketsScreen = () => {
             return (
                 <TouchableOpacity
                     onPress={() => setModalVisible(true)}
-                    className="flex-1 bg-gray-50 p-4 m-2 rounded-2xl border-2 border-dashed border-gray-300 min-h-[140px] justify-center items-center"
+                    className="flex-1 bg-gray-50 p-4 m-2 rounded-xl border-2 border-dashed border-gray-300 min-h-[140px] justify-center items-center max-w-[47%]"
                 >
                     <Ionicons name="add" size={32} color="#9CA3AF" />
                     <Text className="text-gray-500 font-medium text-sm mt-2 text-center">Buat Dompet</Text>
@@ -129,7 +134,7 @@ const PocketsScreen = () => {
 
         return (
             <TouchableOpacity
-                className="flex-1 bg-white p-4 m-2 rounded-2xl shadow-sm border border-gray-100 min-h-[140px] justify-between active:bg-gray-50"
+                className="flex-1 bg-white p-4 m-2 rounded-xl shadow-sm border border-gray-100 min-h-[140px] justify-between max-w-[47%]"
                 onPress={() => navigation.navigate('PocketDetail', { wallet: item })}
             >
                 <View className="flex-row justify-between items-start">
@@ -151,10 +156,11 @@ const PocketsScreen = () => {
 
     return (
         <SafeAreaView className="flex-1 bg-gray-50">
-            <View className="p-6 bg-white border-b border-gray-100 flex-row justify-between items-center">
+            <View className="bg-primary p-6 pb-8 shadow-sm">
+                <Text className="text-2xl font-bold text-white mb-6">Dompet</Text>
                 <View>
-                    <Text className="text-2xl font-bold text-gray-800">Dompet Keuangan</Text>
-                    <Text className="text-gray-500 text-sm mt-1">Kelola sumber dana & akun</Text>
+                    <Text className="text-green-50 text-sm font-medium mb-1">Total Aset</Text>
+                    <Text className="text-white text-3xl font-bold tracking-tight">{formatCurrency(totalAssets)}</Text>
                 </View>
             </View>
 
@@ -166,11 +172,6 @@ const PocketsScreen = () => {
                 contentContainerStyle={{ padding: 16 }}
                 columnWrapperStyle={{ justifyContent: 'space-between' }}
                 showsVerticalScrollIndicator={false}
-                ListFooterComponent={
-                    <TouchableOpacity onPress={handleReset} className="mt-8 mb-8 p-4 bg-red-50 rounded-xl border border-red-100 items-center mx-4">
-                        <Text className="text-red-500 font-bold">Reset Semua Data</Text>
-                    </TouchableOpacity>
-                }
             />
 
             {/* Add Wallet Modal */}
@@ -181,7 +182,7 @@ const PocketsScreen = () => {
                 onRequestClose={() => setModalVisible(false)}
             >
                 <View className="flex-1 justify-end bg-black/50">
-                    <View className="bg-white rounded-t-3xl p-6 h-[85%]">
+                    <View className="bg-white rounded-t-3xl p-6 max-h-[90%]">
                         <View className="flex-row justify-between items-center mb-6">
                             <Text className="text-xl font-bold text-gray-800">Buat Dompet Baru</Text>
                             <TouchableOpacity onPress={() => setModalVisible(false)}>
@@ -220,13 +221,13 @@ const PocketsScreen = () => {
                                 ))}
                             </View>
 
-                            <TouchableOpacity
-                                className="bg-primary py-4 rounded-xl items-center mb-8"
-                                onPress={handleAddWallet}
-                            >
-                                <Text className="text-white font-bold text-lg">Simpan Dompet</Text>
-                            </TouchableOpacity>
                         </ScrollView>
+                        <TouchableOpacity
+                            className="bg-primary py-4 rounded-xl items-center mt-4"
+                            onPress={handleAddWallet}
+                        >
+                            <Text className="text-white font-bold text-lg">Simpan Dompet</Text>
+                        </TouchableOpacity>
                     </View>
                 </View>
             </Modal>

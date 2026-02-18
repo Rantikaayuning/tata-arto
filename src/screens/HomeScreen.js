@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Pressable, Modal, ScrollView } from 'react-native';
+import { View, Text, FlatList, SectionList, TouchableOpacity, Pressable, Modal, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import useExpenseStore from '../context/useExpenseStore';
 import ExpenseItem from '../components/ExpenseItem';
@@ -109,16 +109,41 @@ const HomeScreen = ({ navigation }) => {
         };
     }, [expenses, selectedDate]);
 
+    const groupedExpenses = useMemo(() => {
+        if (!filteredExpenses.length) return [];
+
+        const sections = [];
+        let currentTitle = null;
+        let currentSection = null;
+
+        filteredExpenses.forEach(expense => {
+            const date = new Date(expense.date);
+            const title = format(date, 'EEEE, d MMMM yyyy', { locale: id });
+
+            if (title !== currentTitle) {
+                currentTitle = title;
+                currentSection = { title, data: [] };
+                sections.push(currentSection);
+            }
+            currentSection.data.push(expense);
+        });
+
+        return sections;
+    }, [filteredExpenses]);
+
     const renderHeader = () => (
         <View className="mb-6 px-4 pt-2">
             {/* Global Balance - Top Left */}
+            {/* Sisa (Net) - Top Left (Replaced Total Aset) */}
             <View className="mb-6 mt-2">
-                <Text className="text-gray-500 text-sm font-medium mb-1">Total Aset (Global)</Text>
-                <Text className="text-3xl font-bold text-gray-800 tracking-tight">{formatCurrency(globalBalance)}</Text>
+                <Text className="text-gray-500 text-sm font-medium mb-1">Sisa Bulan Ini</Text>
+                <Text className={`text-3xl font-bold tracking-tight ${totalIncome - totalExpense >= 0 ? 'text-gray-800' : 'text-red-600'}`}>
+                    {formatCurrency(totalIncome - totalExpense)}
+                </Text>
             </View>
 
             {/* Monthly Stats Card */}
-            <View className="p-5 bg-primary rounded-3xl shadow-lg shadow-green-900/20">
+            <View className="p-5 bg-primary rounded-2xl shadow-lg shadow-green-900/20">
                 <View className="flex-row justify-between items-center mb-4">
                     <Text className="text-green-50 text-base font-medium">Arus Kas Bulan Ini</Text>
                     <View className="bg-white/20 px-2 py-1 rounded-lg">
@@ -128,15 +153,10 @@ const HomeScreen = ({ navigation }) => {
                     </View>
                 </View>
 
-                <View className="mb-5">
-                    <Text className="text-green-100 text-xs font-medium mb-1">Sisa (Net)</Text>
-                    <Text className="text-white text-3xl font-bold tracking-tight">
-                        {formatCurrency(totalIncome - totalExpense)}
-                    </Text>
-                </View>
+
 
                 <View className="flex-row gap-4">
-                    <View className="flex-1 bg-white/10 p-3 rounded-2xl">
+                    <View className="flex-1 bg-white/10 p-3 rounded-xl">
                         <View className="flex-row items-center mb-1">
                             <View className="w-6 h-6 rounded-full bg-green-400/20 items-center justify-center mr-2">
                                 <Ionicons name="arrow-up" size={14} color="#86EFAC" />
@@ -148,7 +168,7 @@ const HomeScreen = ({ navigation }) => {
                         </Text>
                     </View>
 
-                    <View className="flex-1 bg-white/10 p-3 rounded-2xl">
+                    <View className="flex-1 bg-white/10 p-3 rounded-xl">
                         <View className="flex-row items-center mb-1">
                             <View className="w-6 h-6 rounded-full bg-red-400/20 items-center justify-center mr-2">
                                 <Ionicons name="arrow-down" size={14} color="#FDA4AF" />
@@ -166,14 +186,17 @@ const HomeScreen = ({ navigation }) => {
 
     const renderYearItem = ({ item }) => (
         <TouchableOpacity
-            onPress={() => setTempYear(item)}
-            className={`px-4 py-2 rounded-full mr-2 h-[40px] justify-center ${tempYear === item
-                ? 'bg-primary'
-                : 'bg-gray-100'
+            onPress={() => {
+                setTempYear(item);
+                const newDate = setYear(selectedDate, item);
+                setSelectedDate(newDate);
+            }}
+            className={`px-4 py-2 rounded-full mr-2 h-[40px] justify-center ${getYear(selectedDate) === item ? 'bg-primary' : 'bg-gray-100'
                 }`}
             style={{ width: ITEM_WIDTH }}
         >
-            <Text className={`font-bold text-center ${tempYear === item ? 'text-white' : 'text-gray-600'}`}>
+            <Text className={`font-bold text-center ${getYear(selectedDate) === item ? 'text-white' : 'text-gray-600'
+                }`}>
                 {item}
             </Text>
         </TouchableOpacity>
@@ -184,7 +207,7 @@ const HomeScreen = ({ navigation }) => {
             <View className="flex-1">
                 {renderHeader()}
 
-                <View className="flex-1 px-6">
+                <View className="flex-1 px-4">
                     {/* Month Selector Row */}
                     <View className="flex-row justify-end mb-2">
                         <TouchableOpacity
@@ -199,16 +222,21 @@ const HomeScreen = ({ navigation }) => {
                         </TouchableOpacity>
                     </View>
 
-                    <View className="flex-row justify-between items-center mb-4">
-                        <Text className="text-xl font-bold text-gray-800 ml-2">Riwayat Transaksi</Text>
+                    <View className="flex-row justify-between items-center mb-2">
+                        <Text className="text-xl font-bold text-gray-800">Riwayat Transaksi</Text>
                     </View>
 
-                    <FlatList
-                        data={filteredExpenses}
+                    <SectionList
+                        sections={groupedExpenses}
+                        contentContainerStyle={{ paddingBottom: 40 }}
                         keyExtractor={(item) => item.id}
                         renderItem={({ item }) => <ExpenseItem item={item} />}
-                        contentContainerStyle={{ paddingBottom: 100 }}
+                        renderSectionHeader={({ section: { title } }) => (
+                            <Text className="text-gray-500 font-bold text-sm mt-4 mb-2 bg-gray-50 pb-1">{title}</Text>
+                        )}
+
                         showsVerticalScrollIndicator={false}
+                        stickySectionHeadersEnabled={false}
                         ListEmptyComponent={
                             <View className="items-center justify-center mt-20">
                                 <Ionicons name="clipboard-outline" size={60} color="#D1D5DB" />
@@ -221,10 +249,10 @@ const HomeScreen = ({ navigation }) => {
 
                 {isFabOpen && (
                     <Pressable
-                        className="absolute inset-0 bg-black/50 z-40"
+                        className="absolute inset-0 bg-black/80 z-40"
                         onPress={() => setIsFabOpen(false)}
                     >
-                        <View className="absolute bottom-24 right-8 items-end z-50">
+                        <View className="absolute bottom-20 right-8 items-end z-50">
                             <TouchableOpacity
                                 className="flex-row items-center bg-green-600 px-4 py-3 rounded-full mb-4 shadow-lg active:scale-95"
                                 onPress={() => handleNavigate('income')}
@@ -257,7 +285,7 @@ const HomeScreen = ({ navigation }) => {
                         className="flex-1 bg-black/60 justify-center items-center p-6"
                         onPress={() => setMonthModalVisible(false)}
                     >
-                        <View className="bg-white rounded-3xl w-full max-w-sm overflow-hidden p-4 shadow-2xl">
+                        <View className="bg-white rounded-2xl w-full max-w-sm overflow-hidden p-4 shadow-2xl">
                             <View className="flex-row justify-between items-center mb-6 px-2">
                                 <Text className="text-lg font-bold text-gray-800">Pilih Periode</Text>
                                 <TouchableOpacity onPress={() => setMonthModalVisible(false)} className="p-1 bg-gray-100 rounded-full">

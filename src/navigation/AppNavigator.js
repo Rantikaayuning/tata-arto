@@ -10,15 +10,9 @@ import MonthlyScreen from '../screens/MonthlyScreen';
 import PocketDetailScreen from '../screens/PocketDetailScreen';
 import AddExpenseScreen from '../screens/AddExpenseScreen';
 import PocketsScreen from '../screens/PocketsScreen';
-import withSwipe from '../components/withSwipe'; // Import HOC
-
+import SearchScreen from '../screens/SearchScreen';
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
-
-// Wrap screens with Swipe Logic
-const HomeScreenWithSwipe = withSwipe(HomeScreen, null, 'Pockets');
-const PocketsScreenWithSwipe = withSwipe(PocketsScreen, 'Home', 'Monthly');
-const MonthlyScreenWithSwipe = withSwipe(MonthlyScreen, 'Pockets', null);
 
 const MainTabs = () => {
     return (
@@ -27,8 +21,12 @@ const MainTabs = () => {
                 headerShown: false,
                 tabBarActiveTintColor: '#528567',
                 tabBarInactiveTintColor: '#9CA3AF',
+                tabBarItemStyle: {
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                },
                 tabBarStyle: {
-                    height: 70,
+                    height: 80,
                     backgroundColor: '#FFFFFF',
                     borderTopWidth: 0,
                     elevation: 0,
@@ -37,7 +35,7 @@ const MainTabs = () => {
                     shadowOpacity: 0.05,
                     shadowRadius: 10,
                     paddingTop: 10,
-                    paddingBottom: 10,
+                    paddingBottom: 20,
                 },
                 tabBarLabelStyle: {
                     fontSize: 12,
@@ -56,7 +54,7 @@ const MainTabs = () => {
         >
             <Tab.Screen
                 name="Home"
-                component={HomeScreenWithSwipe}
+                component={HomeScreen}
                 options={{
                     tabBarLabel: 'Harian',
                     tabBarIcon: ({ color, size, focused }) => (
@@ -68,7 +66,7 @@ const MainTabs = () => {
             />
             <Tab.Screen
                 name="Pockets"
-                component={PocketsScreenWithSwipe}
+                component={PocketsScreen}
                 options={{
                     tabBarLabel: 'Dompet',
                     tabBarIcon: ({ color, size, focused }) => (
@@ -79,8 +77,20 @@ const MainTabs = () => {
                 }}
             />
             <Tab.Screen
+                name="Search"
+                component={SearchScreen}
+                options={{
+                    tabBarLabel: 'Pencarian',
+                    tabBarIcon: ({ color, size, focused }) => (
+                        <View className={`items-center justify-center p-1 rounded-xl ${focused ? 'bg-gray-100' : ''}`}>
+                            <Ionicons name="search" color={color} size={size + 2} />
+                        </View>
+                    ),
+                }}
+            />
+            <Tab.Screen
                 name="Monthly"
-                component={MonthlyScreenWithSwipe}
+                component={MonthlyScreen}
                 options={{
                     tabBarLabel: 'Bulanan',
                     tabBarIcon: ({ color, size, focused }) => (
@@ -108,7 +118,7 @@ const AppNavigator = () => {
                     name="AddExpense"
                     component={AddExpenseScreen}
                     options={{
-                        presentation: 'modal',
+                        presentation: 'transparentModal',
                         animation: 'slide_from_bottom',
                     }}
                 />

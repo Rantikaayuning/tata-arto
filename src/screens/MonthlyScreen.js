@@ -1,16 +1,33 @@
-import React, { useMemo } from 'react';
-import { View, Text, FlatList } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { View, Text, FlatList, TouchableOpacity, Modal, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import useExpenseStore from '../context/useExpenseStore';
 import { formatCurrency, formatMonth } from '../utils/format';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 const MonthlyScreen = () => {
-    const expenses = useExpenseStore((state) => state.expenses);
+    const expenses = useExpenseStore((state) => state.expenses) || [];
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+    const [showYearModal, setShowYearModal] = useState(false);
+
+    // Extract available years from expenses
+    const availableYears = useMemo(() => {
+        if (!expenses || expenses.length === 0) return [new Date().getFullYear()];
+
+        const years = new Set(expenses.map(e => new Date(e.date).getFullYear()));
+        // Ensure current year is always available
+        years.add(new Date().getFullYear());
+
+        return Array.from(years).sort((a, b) => b - a); // Descending
+    }, [expenses]);
 
     const monthlyData = useMemo(() => {
-        const grouped = expenses.reduce((acc, curr) => {
+        // Filter by selected year first
+        const yearExpenses = expenses.filter(e => new Date(e.date).getFullYear() === selectedYear);
+
+        const grouped = yearExpenses.reduce((acc, curr) => {
             const date = new Date(curr.date);
-            const key = `${date.getFullYear()}-${date.getMonth()}`; // unique key for month
+            const key = `${date.getFullYear()}-${date.getMonth()}`; // unique key
 
             if (!acc[key]) {
                 acc[key] = {
@@ -32,12 +49,25 @@ const MonthlyScreen = () => {
         }, {});
 
         return Object.values(grouped).sort((a, b) => b.dateObj - a.dateObj);
-    }, [expenses]);
+    }, [expenses, selectedYear]);
 
     return (
         <SafeAreaView className="flex-1 bg-gray-50">
-            <View className="p-6 bg-white border-b border-gray-100">
-                <Text className="text-2xl font-bold text-gray-800">Rangkuman Bulanan</Text>
+            {/* Header with Year Selector */}
+            <View className="p-6 bg-primary pb-8 shadow-sm">
+                <Text className="text-2xl font-bold text-white">Rangkuman Bulanan</Text>
+            </View>
+
+            {/* Year Selector - Below Header */}
+            <View className="px-6 py-4">
+                <Text className="text-gray-500 text-sm font-bold mb-2 ml-1">Tahun</Text>
+                <TouchableOpacity
+                    onPress={() => setShowYearModal(true)}
+                    className="flex-row items-center bg-white px-4 py-3 rounded-xl border border-gray-200 self-start shadow-sm"
+                >
+                    <Text className="font-bold text-gray-700 mr-2">{selectedYear}</Text>
+                    <Ionicons name="chevron-down" size={16} color="#374151" />
+                </TouchableOpacity>
             </View>
 
             <FlatList
@@ -70,10 +100,45 @@ const MonthlyScreen = () => {
                 )}
                 ListEmptyComponent={
                     <View className="items-center justify-center mt-20">
-                        <Text className="text-gray-400 text-lg">Belum ada data bulanan</Text>
+                        <Text className="text-gray-400 text-lg">Belum ada data di tahun {selectedYear}</Text>
                     </View>
                 }
             />
+
+            {/* Year Selection Modal */}
+            <Modal
+                transparent={true}
+                visible={showYearModal}
+                animationType="fade"
+                onRequestClose={() => setShowYearModal(false)}
+            >
+                <TouchableOpacity
+                    className="flex-1 bg-black/50 justify-center items-center p-6"
+                    activeOpacity={1}
+                    onPress={() => setShowYearModal(false)}
+                >
+                    <View className="bg-white rounded-2xl w-[80%] max-h-[50%] p-4 overflow-hidden">
+                        <Text className="text-lg font-bold text-gray-800 mb-4 text-center">Pilih Tahun</Text>
+                        <FlatList
+                            data={availableYears}
+                            keyExtractor={item => item.toString()}
+                            renderItem={({ item }) => (
+                                <TouchableOpacity
+                                    className={`p-4 items-center border-b border-gray-100 ${selectedYear === item ? 'bg-primary/10' : ''}`}
+                                    onPress={() => {
+                                        setSelectedYear(item);
+                                        setShowYearModal(false);
+                                    }}
+                                >
+                                    <Text className={`text-lg font-medium ${selectedYear === item ? 'text-primary' : 'text-gray-700'}`}>
+                                        {item}
+                                    </Text>
+                                </TouchableOpacity>
+                            )}
+                        />
+                    </View>
+                </TouchableOpacity>
+            </Modal>
         </SafeAreaView>
     );
 };
