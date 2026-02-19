@@ -56,7 +56,7 @@ const MainTabs = () => {
                 name="Home"
                 component={HomeScreen}
                 options={{
-                    tabBarLabel: 'Harian',
+                    tabBarLabel: 'Beranda',
                     tabBarIcon: ({ color, size, focused }) => (
                         <View className={`items-center justify-center p-1 rounded-xl ${focused ? 'bg-gray-100' : ''}`}>
                             <Ionicons name="home" color={color} size={size + 2} />
@@ -80,7 +80,7 @@ const MainTabs = () => {
                 name="Search"
                 component={SearchScreen}
                 options={{
-                    tabBarLabel: 'Pencarian',
+                    tabBarLabel: 'Cari',
                     tabBarIcon: ({ color, size, focused }) => (
                         <View className={`items-center justify-center p-1 rounded-xl ${focused ? 'bg-gray-100' : ''}`}>
                             <Ionicons name="search" color={color} size={size + 2} />
@@ -92,7 +92,7 @@ const MainTabs = () => {
                 name="Monthly"
                 component={MonthlyScreen}
                 options={{
-                    tabBarLabel: 'Bulanan',
+                    tabBarLabel: 'Laporan',
                     tabBarIcon: ({ color, size, focused }) => (
                         <View className={`items-center justify-center p-1 rounded-xl ${focused ? 'bg-gray-100' : ''}`}>
                             <Ionicons name="calendar" color={color} size={size + 2} />
