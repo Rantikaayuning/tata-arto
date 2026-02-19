@@ -7,8 +7,12 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 
 const MonthlyScreen = () => {
     const expenses = useExpenseStore((state) => state.expenses) || [];
+    const isBalanceHidden = useExpenseStore((state) => state.isBalanceHidden);
+
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const [showYearModal, setShowYearModal] = useState(false);
+
+    const renderHiddenAmount = (amount) => isBalanceHidden ? '••••••' : formatCurrency(amount);
 
     // Extract available years from expenses
     const availableYears = useMemo(() => {
@@ -95,7 +99,7 @@ const MonthlyScreen = () => {
                                     </View>
                                     <Text className="text-gray-400 font-bold text-xs uppercase tracking-wider">Pemasukan</Text>
                                 </View>
-                                <Text className="text-emerald-500 font-bold text-base tracking-tight">+ {formatCurrency(item.income)}</Text>
+                                <Text className="text-emerald-500 font-bold text-base tracking-tight">+ {renderHiddenAmount(item.income)}</Text>
                             </View>
 
                             <View className="flex-row justify-between items-center">
@@ -105,7 +109,7 @@ const MonthlyScreen = () => {
                                     </View>
                                     <Text className="text-gray-400 font-bold text-xs uppercase tracking-wider">Pengeluaran</Text>
                                 </View>
-                                <Text className="text-rose-500 font-bold text-base tracking-tight">- {formatCurrency(item.expense)}</Text>
+                                <Text className="text-rose-500 font-bold text-base tracking-tight">- {renderHiddenAmount(item.expense)}</Text>
                             </View>
                         </View>
 
@@ -114,7 +118,7 @@ const MonthlyScreen = () => {
                         <View className="flex-row justify-between items-end">
                             <Text className="text-gray-400 font-bold text-xs uppercase tracking-widest mb-1">Sisa Saldo</Text>
                             <Text className={`text-2xl font-black tracking-tighter ${item.income - item.expense >= 0 ? 'text-primary' : 'text-rose-500'}`}>
-                                {formatCurrency(item.income - item.expense)}
+                                {renderHiddenAmount(item.income - item.expense)}
                             </Text>
                         </View>
                     </View>

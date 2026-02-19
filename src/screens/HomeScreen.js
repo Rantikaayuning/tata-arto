@@ -130,17 +130,28 @@ const HomeScreen = ({ navigation }) => {
         return sections;
     }, [filteredExpenses]);
 
+    // Hide/Unhide Balance Logic
+    const isBalanceHidden = useExpenseStore((state) => state.isBalanceHidden);
+    const toggleBalanceVisibility = useExpenseStore((state) => state.toggleBalanceVisibility);
+
+    const renderHiddenAmount = (amount) => isBalanceHidden ? '••••••' : formatCurrency(amount);
+
     const renderHeader = () => (
         <View className="mb-4 px-4 pt-4">
             {/* Minimalist Header */}
             <View className="items-center mb-4">
-                <Text className="text-gray-400 text-xs font-bold tracking-[0.2em] uppercase mb-2">Total Saldo</Text>
+                <View className="flex-row items-center mb-2">
+                    <Text className="text-gray-400 text-xs font-bold tracking-[0.2em] uppercase mr-2">Total Saldo Bulan Ini</Text>
+                    <TouchableOpacity onPress={toggleBalanceVisibility} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                        <Ionicons name={isBalanceHidden ? "eye-off" : "eye"} size={16} color="#9CA3AF" />
+                    </TouchableOpacity>
+                </View>
                 <Text
                     className="text-4xl font-extrabold text-primary tracking-tighter"
                     adjustsFontSizeToFit
                     numberOfLines={1}
                 >
-                    {formatCurrency(totalIncome - totalExpense)}
+                    {renderHiddenAmount(totalIncome - totalExpense)}
                 </Text>
             </View>
 
@@ -170,7 +181,7 @@ const HomeScreen = ({ navigation }) => {
                             <Text className="text-emerald-100/60 text-xs font-medium uppercase tracking-wide">Masuk</Text>
                         </View>
                         <Text className="text-white font-bold text-lg tracking-tight" numberOfLines={1} adjustsFontSizeToFit>
-                            {formatCurrency(totalIncome)}
+                            {renderHiddenAmount(totalIncome)}
                         </Text>
                     </View>
 
@@ -183,7 +194,7 @@ const HomeScreen = ({ navigation }) => {
                             <Text className="text-rose-100/60 text-xs font-medium uppercase tracking-wide">Keluar</Text>
                         </View>
                         <Text className="text-white font-bold text-lg tracking-tight" numberOfLines={1} adjustsFontSizeToFit>
-                            {formatCurrency(totalExpense)}
+                            {renderHiddenAmount(totalExpense)}
                         </Text>
                     </View>
                 </View>

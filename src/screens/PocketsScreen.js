@@ -10,6 +10,7 @@ const PocketsScreen = () => {
     const navigation = useNavigation();
     const expenses = useExpenseStore((state) => state.expenses) || [];
     const wallets = useExpenseStore((state) => state.wallets) || [];
+    const isBalanceHidden = useExpenseStore((state) => state.isBalanceHidden);
     const addWallet = useExpenseStore((state) => state.addWallet);
     const addExpense = useExpenseStore((state) => state.addExpense);
     const resetAll = useExpenseStore((state) => state.resetAll);
@@ -18,6 +19,8 @@ const PocketsScreen = () => {
     const [newWalletName, setNewWalletName] = useState('');
     const [newWalletIcon, setNewWalletIcon] = useState('wallet');
     const [initialAmount, setInitialAmount] = useState('');
+
+    const renderHiddenAmount = (amount) => isBalanceHidden ? '••••••' : formatCurrency(amount);
 
     const walletsList = useMemo(() => {
         const walletMap = wallets.reduce((acc, w) => {
@@ -153,7 +156,7 @@ const PocketsScreen = () => {
                         adjustsFontSizeToFit
                         numberOfLines={1}
                     >
-                        {formatCurrency(item.balance)}
+                        {renderHiddenAmount(item.balance)}
                     </Text>
                 </View>
             </TouchableOpacity>
@@ -173,7 +176,7 @@ const PocketsScreen = () => {
 
                     <Text className="text-white/60 text-xs font-bold tracking-[0.2em] uppercase mb-2">Total Aset</Text>
                     <Text className="text-4xl font-black text-white tracking-tighter shadow-sm">
-                        {formatCurrency(totalAssets)}
+                        {renderHiddenAmount(totalAssets)}
                     </Text>
                 </View>
             </View>

@@ -35,6 +35,12 @@ const useExpenseStore = create(
                     categories: [...state.categories, newCategory],
                 }));
             },
+            isBalanceHidden: false,
+            toggleBalanceVisibility: () => {
+                set((state) => ({
+                    isBalanceHidden: !state.isBalanceHidden,
+                }));
+            },
             addExpense: (expense) => {
                 set((state) => ({
                     expenses: [

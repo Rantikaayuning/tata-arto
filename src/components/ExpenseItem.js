@@ -3,7 +3,11 @@ import { View, Text } from 'react-native';
 import { formatCurrency, formatDate } from '../utils/format';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
+import useExpenseStore from '../context/useExpenseStore';
+
 const ExpenseItem = ({ item }) => {
+    const isBalanceHidden = useExpenseStore(state => state.isBalanceHidden);
+    // Determine icon based on category or default
     const iconName = item.category?.icon || 'help-circle-outline';
     const isIncome = item.type === 'income';
 
@@ -25,7 +29,7 @@ const ExpenseItem = ({ item }) => {
             </View>
 
             <Text className={`font-extrabold text-lg tracking-tight ${isIncome ? 'text-emerald-500' : 'text-rose-500'}`}>
-                {isIncome ? '+' : '-'} {formatCurrency(item.amount)}
+                {isIncome ? '+' : '-'} {isBalanceHidden ? '••••••' : formatCurrency(item.amount)}
             </Text>
         </View>
     );

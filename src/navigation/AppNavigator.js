@@ -3,7 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { View, Platform, StatusBar } from 'react-native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+
 
 import HomeScreen from '../screens/HomeScreen';
 import MonthlyScreen from '../screens/MonthlyScreen';
