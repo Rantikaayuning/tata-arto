@@ -1,9 +1,18 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Modal, ScrollView } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import useExpenseStore from '../context/useExpenseStore';
 import { formatCurrency, formatMonth } from '../utils/format';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { Expense } from '../types';
+
+interface MonthlyData {
+    monthYear: string;
+    income: number;
+    expense: number;
+    dateObj: Date;
+    key: string;
+}
 
 const MonthlyScreen = () => {
     const expenses = useExpenseStore((state) => state.expenses) || [];
@@ -12,7 +21,7 @@ const MonthlyScreen = () => {
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const [showYearModal, setShowYearModal] = useState(false);
 
-    const renderHiddenAmount = (amount) => isBalanceHidden ? '••••••' : formatCurrency(amount);
+    const renderHiddenAmount = (amount: number) => isBalanceHidden ? '••••••' : formatCurrency(amount);
 
     // Extract available years from expenses
     const availableYears = useMemo(() => {
@@ -29,7 +38,7 @@ const MonthlyScreen = () => {
         // Filter by selected year first
         const yearExpenses = expenses.filter(e => new Date(e.date).getFullYear() === selectedYear);
 
-        const grouped = yearExpenses.reduce((acc, curr) => {
+        const grouped = yearExpenses.reduce((acc: { [key: string]: MonthlyData }, curr: Expense) => {
             const date = new Date(curr.date);
             const key = `${date.getFullYear()}-${date.getMonth()}`; // unique key
 
@@ -43,16 +52,17 @@ const MonthlyScreen = () => {
                 };
             }
 
+            const amount = parseFloat(curr.amount as any); // Cast to any to safely handle potential strings in store
             if (curr.type === 'income') {
-                acc[key].income += parseFloat(curr.amount);
+                acc[key].income += amount;
             } else {
-                acc[key].expense += parseFloat(curr.amount);
+                acc[key].expense += amount;
             }
 
             return acc;
         }, {});
 
-        return Object.values(grouped).sort((a, b) => b.dateObj - a.dateObj);
+        return Object.values(grouped).sort((a, b) => b.dateObj.getTime() - a.dateObj.getTime());
     }, [expenses, selectedYear]);
 
     return (

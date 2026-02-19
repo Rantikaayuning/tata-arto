@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView, Modal, FlatList, Platform } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import useExpenseStore from '../context/useExpenseStore';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { formatNumberWithDots, parseNumberFromDots, formatDate } from '../utils/format';
+import { Wallet, Category, TransactionType } from '../types';
 
-const AddExpenseScreen = ({ navigation, route }) => {
+const AddExpenseScreen = ({ navigation, route }: any) => {
     const addExpense = useExpenseStore((state) => state.addExpense);
     const categories = useExpenseStore((state) => state.categories) || [];
     const wallets = useExpenseStore((state) => state.wallets) || [];
@@ -14,35 +14,31 @@ const AddExpenseScreen = ({ navigation, route }) => {
 
     const initialType = route.params?.initialType || 'expense';
 
-    const [type, setType] = useState(initialType);
+    const [type, setType] = useState<TransactionType>(initialType);
     const [amount, setAmount] = useState('');
 
-    // Two selections: Source (Wallet) and Category (Type)
-    const [selectedWallet, setSelectedWallet] = useState(null);
-    const [selectedCategory, setSelectedCategory] = useState(null);
+    const [selectedWallet, setSelectedWallet] = useState<Wallet | null>(null);
+    const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
 
     const [note, setNote] = useState('');
     const [date, setDate] = useState(new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
 
-    // New Category States
     const [modalVisible, setModalVisible] = useState(false);
     const [newCategoryName, setNewCategoryName] = useState('');
     const [newCategoryIcon, setNewCategoryIcon] = useState('star');
 
-    // Filter categories based on type
     const incomeCategories = categories.filter(c => c.type === 'income');
     const expenseCategories = categories.filter(c => c.type === 'expense');
 
     useEffect(() => {
-        // Reset category when type changes (Wallet selection can persist)
         setSelectedCategory(null);
         if (wallets.length > 0 && !selectedWallet) {
-            setSelectedWallet(wallets[0]); // Default to first wallet
+            setSelectedWallet(wallets[0]);
         }
     }, [type, wallets]);
 
-    const handleAmountChange = (text) => {
+    const handleAmountChange = (text: string) => {
         const cleanText = text.replace(/[^0-9]/g, '');
         const formatted = formatNumberWithDots(cleanText);
         setAmount(formatted);
@@ -91,7 +87,7 @@ const AddExpenseScreen = ({ navigation, route }) => {
         setModalVisible(false);
     };
 
-    const onDateChange = (event, selectedDate) => {
+    const onDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
         setShowDatePicker(false);
         if (selectedDate) {
             setDate(selectedDate);
@@ -109,16 +105,16 @@ const AddExpenseScreen = ({ navigation, route }) => {
         'gift', 'heart', 'star', 'ellipsis-horizontal'
     ];
 
-    const renderIconItem = ({ item }) => (
+    const renderIconItem = ({ item }: { item: string }) => (
         <TouchableOpacity
             onPress={() => setNewCategoryIcon(item)}
             className={`w-12 h-12  items-center justify-center m-2 ${newCategoryIcon === item ? 'bg-primary border-primary border' : 'bg-gray-100'}`}
         >
-            <Ionicons name={item} size={24} color={newCategoryIcon === item ? 'white' : '#4B5563'} />
+            <Ionicons name={item as any} size={24} color={newCategoryIcon === item ? 'white' : '#4B5563'} />
         </TouchableOpacity>
     );
 
-    const renderPill = (item, isSelected, onPress, colorClass) => (
+    const renderPill = (item: Category | Wallet, isSelected: boolean, onPress: () => void, colorClass: string) => (
         <TouchableOpacity
             key={item.id}
             onPress={onPress}
@@ -127,7 +123,7 @@ const AddExpenseScreen = ({ navigation, route }) => {
                 : 'bg-white border-gray-200'
                 }`}
         >
-            <Ionicons name={item.icon || 'help'} size={18} color={isSelected ? '#1F2937' : '#6B7280'} />
+            <Ionicons name={item.icon as any || 'help'} size={18} color={isSelected ? '#1F2937' : '#6B7280'} />
             <Text className={`ml-2 font-medium ${isSelected ? 'text-gray-900' : 'text-gray-500'}`}>
                 {item.name}
             </Text>
@@ -148,9 +144,6 @@ const AddExpenseScreen = ({ navigation, route }) => {
                 </View>
 
                 <ScrollView className="p-6">
-                    {/* Type Selector Removed - Fixed to initialType */}
-
-                    {/* Amount Input */}
                     <View className="mb-6">
                         <Text className="text-gray-600 font-medium mb-2">Jumlah (Rp)</Text>
                         <TextInput
@@ -163,7 +156,6 @@ const AddExpenseScreen = ({ navigation, route }) => {
                         />
                     </View>
 
-                    {/* Date Picker - Moved Up for Visibility */}
                     <View className="mb-6">
                         <Text className="text-gray-600 font-medium mb-2">Tanggal</Text>
                         <TouchableOpacity
@@ -217,10 +209,8 @@ const AddExpenseScreen = ({ navigation, route }) => {
                         )}
                     </View>
 
-                    {/* Logic Switch based on Type */}
                     {type === 'expense' ? (
                         <>
-                            {/* 1. Select Wallet (Source) */}
                             <View className="mb-6">
                                 <Text className="text-gray-600 font-medium mb-3">Sumber Dana (Dompet)</Text>
                                 <View className="flex-row flex-wrap">
@@ -235,7 +225,6 @@ const AddExpenseScreen = ({ navigation, route }) => {
                                 </View>
                             </View>
 
-                            {/* 2. Select Category (Destination) */}
                             <View className="mb-6">
                                 <Text className="text-gray-600 font-medium mb-3">Kategori Pengeluaran</Text>
                                 <View className="flex-row flex-wrap">
@@ -259,7 +248,6 @@ const AddExpenseScreen = ({ navigation, route }) => {
                         </>
                     ) : (
                         <>
-                            {/* 1. Select Category (Source) */}
                             <View className="mb-6">
                                 <Text className="text-gray-600 font-medium mb-3">Sumber Pemasukan</Text>
                                 <View className="flex-row flex-wrap">
@@ -281,7 +269,6 @@ const AddExpenseScreen = ({ navigation, route }) => {
                                 </View>
                             </View>
 
-                            {/* 2. Select Wallet (Destination) */}
                             <View className="mb-6">
                                 <Text className="text-gray-600 font-medium mb-3">Masuk ke Dompet</Text>
                                 <View className="flex-row flex-wrap">
@@ -297,8 +284,6 @@ const AddExpenseScreen = ({ navigation, route }) => {
                             </View>
                         </>
                     )}
-
-
 
                     <View className="mb-8">
                         <Text className="text-gray-600 font-medium mb-2">Catatan (Opsional)</Text>
@@ -320,7 +305,6 @@ const AddExpenseScreen = ({ navigation, route }) => {
                     </View>
                 </ScrollView>
 
-                {/* Add Category Modal */}
                 <Modal
                     animationType="slide"
                     transparent={true}

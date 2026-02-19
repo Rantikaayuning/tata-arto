@@ -1,8 +1,12 @@
 import React from 'react';
-import { TouchableOpacity, Platform, useWindowDimensions } from 'react-native';
+import { TouchableOpacity } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
-const FloatingButton = ({ onPress }) => {
+interface FloatingButtonProps {
+    onPress: () => void;
+}
+
+const FloatingButton: React.FC<FloatingButtonProps> = ({ onPress }) => {
     return (
         <TouchableOpacity
             className="absolute bottom-4 right-6 bg-accent w-14 h-14 rounded-full items-center justify-center shadow-lg shadow-accent/40 elevation-5"

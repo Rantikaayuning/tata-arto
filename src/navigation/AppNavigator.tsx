@@ -2,8 +2,7 @@ import { createMaterialTopTabNavigator } from '@react-navigation/material-top-ta
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { View, Platform, StatusBar } from 'react-native';
-
+import { View } from 'react-native';
 
 import HomeScreen from '../screens/HomeScreen';
 import MonthlyScreen from '../screens/MonthlyScreen';
@@ -41,7 +40,6 @@ const MainTabs = () => {
                     borderTopRightRadius: 25,
                     paddingBottom: 10,
                     paddingTop: 10,
-                    // Ensure content doesn't get clipped by rounded corners on Android if needed
                     overflow: 'hidden',
                 },
                 tabBarLabelStyle: {
@@ -52,10 +50,6 @@ const MainTabs = () => {
                 },
                 tabBarPressColor: 'transparent',
                 tabBarShowIcon: true,
-                tabBarIconStyle: {
-                    width: 30,
-                    height: 30,
-                },
             }}
         >
             <Tab.Screen

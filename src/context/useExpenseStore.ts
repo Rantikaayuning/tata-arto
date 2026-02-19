@@ -1,8 +1,25 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Expense, Wallet, Category } from '../types';
 
-const useExpenseStore = create(
+interface ExpenseState {
+    expenses: Expense[];
+    wallets: Wallet[];
+    categories: Category[];
+    isBalanceHidden: boolean;
+
+    toggleBalanceVisibility: () => void;
+    addExpense: (expense: Omit<Expense, 'id'>) => void;
+    deleteExpense: (id: string) => void;
+    updateExpense: (id: string, updatedExpense: Partial<Expense>) => void;
+    addWallet: (newWallet: Wallet) => void;
+    addCategory: (newCategory: Category) => void;
+    getMonthlyExpenses: (month: number, year: number) => Expense[];
+    resetAll: () => void;
+}
+
+const useExpenseStore = create<ExpenseState>()(
     persist(
         (set, get) => ({
             expenses: [],
@@ -25,35 +42,42 @@ const useExpenseStore = create(
                 { id: 'inc2', name: 'Bonus', icon: 'gift', type: 'income' },
                 { id: 'inc3', name: 'Investasi', icon: 'trending-up', type: 'income' },
             ],
-            addWallet: (newWallet) => {
-                set((state) => ({
-                    wallets: [...state.wallets, newWallet],
-                }));
-            },
-            addCategory: (newCategory) => {
-                set((state) => ({
-                    categories: [...state.categories, newCategory],
-                }));
-            },
+
             isBalanceHidden: false,
+
             toggleBalanceVisibility: () => {
                 set((state) => ({
                     isBalanceHidden: !state.isBalanceHidden,
                 }));
             },
+
+            addWallet: (newWallet) => {
+                set((state) => ({
+                    wallets: [...state.wallets, newWallet],
+                }));
+            },
+
+            addCategory: (newCategory) => {
+                set((state) => ({
+                    categories: [...state.categories, newCategory],
+                }));
+            },
+
             addExpense: (expense) => {
                 set((state) => ({
                     expenses: [
-                        { id: Date.now().toString(), ...expense },
+                        { ...expense, id: Date.now().toString() },
                         ...state.expenses,
                     ],
                 }));
             },
+
             deleteExpense: (id) => {
                 set((state) => ({
                     expenses: state.expenses.filter((e) => e.id !== id),
                 }));
             },
+
             updateExpense: (id, updatedExpense) => {
                 set((state) => ({
                     expenses: state.expenses.map((e) =>
@@ -61,12 +85,14 @@ const useExpenseStore = create(
                     ),
                 }));
             },
+
             getMonthlyExpenses: (month, year) => {
                 return get().expenses.filter((e) => {
                     const date = new Date(e.date);
                     return date.getMonth() === month && date.getFullYear() === year;
                 });
             },
+
             resetAll: () => {
                 set({
                     expenses: [],
@@ -90,7 +116,7 @@ const useExpenseStore = create(
             }
         }),
         {
-            name: 'expense-storage-v3', // v3 implies structural change
+            name: 'expense-storage-v3',
             storage: createJSONStorage(() => AsyncStorage),
         }
     )

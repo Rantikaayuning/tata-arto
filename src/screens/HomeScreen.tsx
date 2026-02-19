@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react';
-import { View, Text, FlatList, SectionList, TouchableOpacity, Pressable, Modal, ScrollView, Platform, StatusBar } from 'react-native';
+import { View, Text, FlatList, SectionList, TouchableOpacity, Pressable, Modal, StatusBar, FlatListProps } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import useExpenseStore from '../context/useExpenseStore';
 import ExpenseItem from '../components/ExpenseItem';
@@ -8,10 +8,16 @@ import { formatCurrency, formatMonth } from '../utils/format';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { isSameMonth, getYear, setYear, setMonth, format } from 'date-fns';
 import { id } from 'date-fns/locale';
+import { Expense } from '../types';
 
 const ITEM_WIDTH = 80;
 
-const HomeScreen = ({ navigation }) => {
+interface Section {
+    title: string;
+    data: Expense[];
+}
+
+const HomeScreen = ({ navigation }: any) => {
     const expenses = useExpenseStore((state) => state.expenses) || [];
     const [isFabOpen, setIsFabOpen] = useState(false);
 
@@ -21,14 +27,14 @@ const HomeScreen = ({ navigation }) => {
 
     // For Modal Logic
     const [tempYear, setTempYear] = useState(getYear(new Date()));
-    const yearListRef = useRef(null);
+    const yearListRef = useRef<FlatList>(null);
 
     const handleOpenModal = () => {
         setTempYear(getYear(selectedDate));
         setMonthModalVisible(true);
     };
 
-    const handleSelectMonth = (monthIndex) => {
+    const handleSelectMonth = (monthIndex: number) => {
         const newDate = setMonth(setYear(selectedDate, tempYear), monthIndex);
         setSelectedDate(newDate);
         setMonthModalVisible(false);
@@ -63,21 +69,21 @@ const HomeScreen = ({ navigation }) => {
         setIsFabOpen(!isFabOpen);
     };
 
-    const handleNavigate = (type) => {
+    const handleNavigate = (type: 'income' | 'expense') => {
         setIsFabOpen(false);
         navigation.navigate('AddExpense', { initialType: type });
     };
 
     // Filtered Data
-    const { filteredExpenses, totalIncome, totalExpense, globalBalance } = useMemo(() => {
+    const { filteredExpenses, totalIncome, totalExpense } = useMemo(() => {
         let globalInc = 0;
         let globalExp = 0;
         let monthlyInc = 0;
         let monthlyExp = 0;
-        const filtered = [];
+        const filtered: Expense[] = [];
 
         expenses.forEach((item) => {
-            const amount = parseFloat(item.amount) || 0;
+            const amount = parseFloat(item.amount.toString()) || 0;
             const itemDate = new Date(item.date);
 
             // Global Calculation
@@ -98,7 +104,7 @@ const HomeScreen = ({ navigation }) => {
             }
         });
 
-        filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+        filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
         return {
             filteredExpenses: filtered,
@@ -111,9 +117,9 @@ const HomeScreen = ({ navigation }) => {
     const groupedExpenses = useMemo(() => {
         if (!filteredExpenses.length) return [];
 
-        const sections = [];
-        let currentTitle = null;
-        let currentSection = null;
+        const sections: Section[] = [];
+        let currentTitle: string | null = null;
+        let currentSection: Section | null = null;
 
         filteredExpenses.forEach(expense => {
             const date = new Date(expense.date);
@@ -124,7 +130,9 @@ const HomeScreen = ({ navigation }) => {
                 currentSection = { title, data: [] };
                 sections.push(currentSection);
             }
-            currentSection.data.push(expense);
+            if (currentSection) {
+                currentSection.data.push(expense);
+            }
         });
 
         return sections;
@@ -134,7 +142,7 @@ const HomeScreen = ({ navigation }) => {
     const isBalanceHidden = useExpenseStore((state) => state.isBalanceHidden);
     const toggleBalanceVisibility = useExpenseStore((state) => state.toggleBalanceVisibility);
 
-    const renderHiddenAmount = (amount) => isBalanceHidden ? '••••••' : formatCurrency(amount);
+    const renderHiddenAmount = (amount: number) => isBalanceHidden ? '••••••' : formatCurrency(amount);
 
     const renderHeader = () => (
         <View className="mb-4 px-4 pt-4">
@@ -202,7 +210,7 @@ const HomeScreen = ({ navigation }) => {
         </View>
     );
 
-    const renderYearItem = ({ item }) => (
+    const renderYearItem = ({ item }: { item: number }) => (
         <TouchableOpacity
             onPress={() => {
                 setTempYear(item);
@@ -252,7 +260,7 @@ const HomeScreen = ({ navigation }) => {
                     <SectionList
                         sections={groupedExpenses}
                         contentContainerStyle={{ paddingBottom: 100 }}
-                        keyExtractor={(item) => item.id}
+                        keyExtractor={(item) => item.id || Math.random().toString()}
                         renderItem={({ item }) => <ExpenseItem item={item} />}
                         renderSectionHeader={({ section: { title } }) => (
                             <Text className="text-gray-400 font-bold text-xs uppercase tracking-widest mt-6 mb-3 pl-1">{title}</Text>

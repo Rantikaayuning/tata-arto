@@ -6,11 +6,12 @@ import useExpenseStore from '../context/useExpenseStore';
 import ExpenseItem from '../components/ExpenseItem';
 import { formatCurrency } from '../utils/format';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { Wallet } from '../types';
 
 const PocketDetailScreen = () => {
     const route = useRoute();
     const navigation = useNavigation();
-    const { wallet } = route.params || {};
+    const { wallet } = (route.params as { wallet: Wallet }) || {};
 
     if (!wallet) {
         return (
@@ -23,19 +24,22 @@ const PocketDetailScreen = () => {
     }
 
     const expenses = useExpenseStore((state) => state.expenses) || [];
+    const isBalanceHidden = useExpenseStore((state) => state.isBalanceHidden);
+
+    const renderHiddenAmount = (amount: number) => isBalanceHidden ? '••••••' : formatCurrency(amount);
 
     const walletExpenses = useMemo(() => {
         return expenses
             .filter(e => e.wallet && e.wallet.id === wallet.id)
-            .sort((a, b) => new Date(b.date) - new Date(a.date));
+            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     }, [expenses, wallet.id]);
 
     const currentBalance = useMemo(() => {
         let bal = 0;
         expenses.forEach(tx => {
             if (tx.wallet && tx.wallet.id === wallet.id) {
-                if (tx.type === 'income') bal += parseFloat(tx.amount);
-                else bal -= parseFloat(tx.amount);
+                if (tx.type === 'income') bal += parseFloat(tx.amount.toString());
+                else bal -= parseFloat(tx.amount.toString());
             }
         });
         return bal;
@@ -53,7 +57,7 @@ const PocketDetailScreen = () => {
                     <Text className="text-gray-500 text-xs">Detail Transaksi</Text>
                 </View>
                 <View className={`p-2 rounded-full bg-gray-50 border border-gray-100`}>
-                    <Ionicons name={wallet.icon} size={24} color="#528567" />
+                    <Ionicons name={wallet.icon as any} size={24} color="#528567" />
                 </View>
             </View>
 
@@ -62,7 +66,7 @@ const PocketDetailScreen = () => {
                 <View className="mx-4 mt-6 mb-2 p-5 bg-primary rounded-2xl shadow-lg shadow-green-900/10">
                     <Text className="text-green-50 text-sm font-medium mb-1">Saldo Saat Ini</Text>
                     <Text className="text-3xl font-bold text-white tracking-tight">
-                        {formatCurrency(currentBalance)}
+                        {renderHiddenAmount(currentBalance)}
                     </Text>
                 </View>
 
@@ -74,7 +78,7 @@ const PocketDetailScreen = () => {
 
                     <FlatList
                         data={walletExpenses}
-                        keyExtractor={item => item.id}
+                        keyExtractor={item => item.id || Math.random().toString()}
                         renderItem={({ item }) => <ExpenseItem item={item} />}
                         showsVerticalScrollIndicator={false}
                         contentContainerStyle={{ paddingBottom: 100 }}

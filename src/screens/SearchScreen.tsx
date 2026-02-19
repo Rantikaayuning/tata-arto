@@ -4,19 +4,20 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import useExpenseStore from '../context/useExpenseStore';
 import ExpenseItem from '../components/ExpenseItem';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
+import { Category } from '../types';
 
-const SearchScreen = ({ navigation }) => {
+const SearchScreen = ({ navigation }: any) => {
     const expenses = useExpenseStore((state) => state.expenses) || [];
     const categories = useExpenseStore((state) => state.categories) || [];
 
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState(null); // null means 'All'
+    const [selectedCategory, setSelectedCategory] = useState<Category | null>(null); // null means 'All'
 
     // Date Filter State
-    const [dateFilterType, setDateFilterType] = useState('all'); // 'all', 'specific'
+    const [dateFilterType, setDateFilterType] = useState<'all' | 'specific'>('all'); // 'all', 'specific'
     const [specificDate, setSpecificDate] = useState(new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
 
@@ -31,7 +32,7 @@ const SearchScreen = ({ navigation }) => {
 
         return expenses.filter(expense => {
             // 1. Note Search
-            const noteMatch = expense.note?.toLowerCase().includes(searchQuery.toLowerCase());
+            const noteMatch = (expense.note || '').toLowerCase().includes(searchQuery.toLowerCase());
 
             if (searchQuery.trim() && !noteMatch) return false;
 
@@ -52,10 +53,10 @@ const SearchScreen = ({ navigation }) => {
             }
 
             return true;
-        }).sort((a, b) => new Date(b.date) - new Date(a.date));
+        }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     }, [expenses, searchQuery, selectedCategory, dateFilterType, specificDate]);
 
-    const onDateChange = (event, selectedDate) => {
+    const onDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
         if (selectedDate) {
             setSpecificDate(selectedDate);
             if (Platform.OS === 'android') setShowDatePicker(false);
@@ -98,8 +99,8 @@ const SearchScreen = ({ navigation }) => {
                             }
                         }}
                         className={`flex-row items-center px-5 py-2.5 rounded-full mr-3 border-0 ${dateFilterType === 'specific'
-                                ? 'bg-primary shadow-lg shadow-indigo-500/30'
-                                : 'bg-white shadow-sm shadow-indigo-100/30'
+                            ? 'bg-primary shadow-lg shadow-indigo-500/30'
+                            : 'bg-white shadow-sm shadow-indigo-100/30'
                             }`}
                     >
                         <Ionicons name="calendar-outline" size={18} color={dateFilterType === 'specific' ? 'white' : '#64748B'} />
@@ -117,8 +118,8 @@ const SearchScreen = ({ navigation }) => {
                     <TouchableOpacity
                         onPress={() => setShowCategoryModal(true)}
                         className={`flex-row items-center px-5 py-2.5 rounded-full mr-3 border-0 ${selectedCategory
-                                ? 'bg-primary shadow-lg shadow-indigo-500/30'
-                                : 'bg-white shadow-sm shadow-indigo-100/30'
+                            ? 'bg-primary shadow-lg shadow-indigo-500/30'
+                            : 'bg-white shadow-sm shadow-indigo-100/30'
                             }`}
                     >
                         <Ionicons name="pricetag-outline" size={18} color={selectedCategory ? 'white' : '#64748B'} />
@@ -142,7 +143,7 @@ const SearchScreen = ({ navigation }) => {
 
                 <FlatList
                     data={filteredExpenses}
-                    keyExtractor={item => item.id}
+                    keyExtractor={item => item.id || Math.random().toString()}
                     renderItem={({ item }) => <ExpenseItem item={item} />}
                     contentContainerStyle={{ paddingBottom: 100 }}
                     showsVerticalScrollIndicator={false}
@@ -183,7 +184,7 @@ const SearchScreen = ({ navigation }) => {
                                     }}
                                 >
                                     <View className={`p-2 rounded-full mr-3 ${item.type === 'income' ? 'bg-green-100' : 'bg-red-100'}`}>
-                                        <Ionicons name={item.icon} size={20} color={item.type === 'income' ? '#16A34A' : '#DC2626'} />
+                                        <Ionicons name={item.icon as any} size={20} color={item.type === 'income' ? '#16A34A' : '#DC2626'} />
                                     </View>
                                     <Text className="text-gray-800 font-medium text-base">{item.name}</Text>
                                     {selectedCategory?.id === item.id && (

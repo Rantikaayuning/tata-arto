@@ -5,9 +5,10 @@ import { useNavigation } from '@react-navigation/native';
 import useExpenseStore from '../context/useExpenseStore';
 import { formatCurrency, parseNumberFromDots, formatNumberWithDots } from '../utils/format';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { Wallet } from '../types';
 
 const PocketsScreen = () => {
-    const navigation = useNavigation();
+    const navigation = useNavigation<any>();
     const expenses = useExpenseStore((state) => state.expenses) || [];
     const wallets = useExpenseStore((state) => state.wallets) || [];
     const isBalanceHidden = useExpenseStore((state) => state.isBalanceHidden);
@@ -20,33 +21,32 @@ const PocketsScreen = () => {
     const [newWalletIcon, setNewWalletIcon] = useState('wallet');
     const [initialAmount, setInitialAmount] = useState('');
 
-    const renderHiddenAmount = (amount) => isBalanceHidden ? '••••••' : formatCurrency(amount);
+    const renderHiddenAmount = (amount: number) => isBalanceHidden ? '••••••' : formatCurrency(amount);
 
     const walletsList = useMemo(() => {
-        const walletMap = wallets.reduce((acc, w) => {
+        const walletMap = wallets.reduce((acc: { [key: string]: Wallet }, w) => {
             acc[w.id] = { ...w, balance: 0 };
             return acc;
         }, {});
 
         expenses.forEach(tx => {
             if (tx.wallet && walletMap[tx.wallet.id]) {
+                const amount = parseFloat(tx.amount.toString());
                 if (tx.type === 'income') {
-                    walletMap[tx.wallet.id].balance += parseFloat(tx.amount);
+                    walletMap[tx.wallet.id].balance = (walletMap[tx.wallet.id].balance || 0) + amount;
                 } else {
-                    walletMap[tx.wallet.id].balance -= parseFloat(tx.amount);
+                    walletMap[tx.wallet.id].balance = (walletMap[tx.wallet.id].balance || 0) - amount;
                 }
             }
         });
 
-        // Sort: 'Dompet Utama' first
         const sorted = Object.values(walletMap).sort((a, b) => {
             if (a.name === 'Dompet Utama') return -1;
             if (b.name === 'Dompet Utama') return 1;
             return 0;
         });
 
-        // Insert 'Add Wallet' card at the end
-        const withAddButton = [...sorted, { id: 'add-new-button', isAddButton: true }];
+        const withAddButton = [...sorted, { id: 'add-new-button', name: 'Add', icon: 'add', type: 'wallet', isAddButton: true } as Wallet];
 
         return withAddButton;
     }, [expenses, wallets]);
@@ -63,7 +63,7 @@ const PocketsScreen = () => {
             return;
         }
 
-        const newWallet = {
+        const newWallet: Wallet = {
             id: Date.now().toString(),
             name: newWalletName,
             icon: newWalletIcon,
@@ -72,13 +72,12 @@ const PocketsScreen = () => {
 
         addWallet(newWallet);
 
-        // If initial amount is set, create an 'Income' transaction for this wallet
         const amount = parseNumberFromDots(initialAmount);
         if (amount > 0) {
             addExpense({
                 amount: amount,
-                wallet: newWallet, // Allocated TO this new wallet
-                category: { name: 'Saldo Awal', icon: 'cash' },
+                wallet: newWallet,
+                category: { id: 'initial', name: 'Saldo Awal', icon: 'cash', type: 'income' },
                 note: 'Saldo Awal Dompet',
                 date: new Date().toISOString(),
                 type: 'income'
@@ -90,28 +89,10 @@ const PocketsScreen = () => {
         setModalVisible(false);
     };
 
-    const handleAmountChange = (text) => {
+    const handleAmountChange = (text: string) => {
         const cleanText = text.replace(/[^0-9]/g, '');
         const formatted = formatNumberWithDots(cleanText);
         setInitialAmount(formatted);
-    };
-
-    const handleReset = () => {
-        Alert.alert(
-            "Reset Data",
-            "Apakah Anda yakin ingin menghapus semua data? Aplikasi akan kembali ke kondisi awal.",
-            [
-                { text: "Batal", style: "cancel" },
-                {
-                    text: "Hapus",
-                    style: "destructive",
-                    onPress: () => {
-                        resetAll();
-                        Alert.alert("Berhasil", "Data telah direset.");
-                    }
-                }
-            ]
-        );
     };
 
     const availableIcons = [
@@ -122,7 +103,7 @@ const PocketsScreen = () => {
         'school', 'gift', 'game-controller'
     ];
 
-    const renderCard = ({ item }) => {
+    const renderCard = ({ item }: { item: Wallet }) => {
         if (item.isAddButton) {
             return (
                 <TouchableOpacity
@@ -144,19 +125,19 @@ const PocketsScreen = () => {
             >
                 <View className="flex-row justify-between items-start">
                     <View className={`w-12 h-12 rounded-full items-center justify-center ${item.name === 'Dompet Utama' ? 'bg-primary/10' : 'bg-gray-50'}`}>
-                        <Ionicons name={item.icon} size={24} color={item.name === 'Dompet Utama' ? '#343B71' : '#64748B'} />
+                        <Ionicons name={item.icon as any} size={24} color={item.name === 'Dompet Utama' ? '#343B71' : '#64748B'} />
                     </View>
-                    {item.balance < 0 && <Ionicons name="alert-circle" size={20} color="#FB7185" />}
+                    {(item.balance || 0) < 0 && <Ionicons name="alert-circle" size={20} color="#FB7185" />}
                 </View>
 
                 <View>
                     <Text className="text-gray-400 font-bold text-xs uppercase tracking-wider mb-2" numberOfLines={1}>{item.name}</Text>
                     <Text
-                        className={`text-xl font-extrabold tracking-tight ${item.balance < 0 ? 'text-rose-500' : 'text-gray-900'}`}
+                        className={`text-xl font-extrabold tracking-tight ${(item.balance || 0) < 0 ? 'text-rose-500' : 'text-gray-900'}`}
                         adjustsFontSizeToFit
                         numberOfLines={1}
                     >
-                        {renderHiddenAmount(item.balance)}
+                        {renderHiddenAmount(item.balance || 0)}
                     </Text>
                 </View>
             </TouchableOpacity>
@@ -168,9 +149,7 @@ const PocketsScreen = () => {
             <View className="px-6 pt-4 pb-2">
                 <Text className="text-3xl font-extrabold text-primary tracking-tighter mb-6">Dompet Saya</Text>
 
-                {/* Total Asset Card */}
                 <View className="bg-primary p-6 rounded-[32px] shadow-2xl shadow-indigo-900/30 android:elevation-10 overflow-hidden relative">
-                    {/* Decorative Circle */}
                     <View className="absolute -right-12 -top-12 w-48 h-48 bg-white/5 rounded-full" />
                     <View className="absolute -left-6 -bottom-6 w-32 h-32 bg-white/5 rounded-full" />
 
@@ -191,7 +170,6 @@ const PocketsScreen = () => {
                 showsVerticalScrollIndicator={false}
             />
 
-            {/* Add Wallet Modal */}
             <Modal
                 animationType="slide"
                 transparent={true}
@@ -235,7 +213,7 @@ const PocketsScreen = () => {
                                         onPress={() => setNewWalletIcon(icon)}
                                         className={`w-14 h-14 rounded-2xl items-center justify-center ${newWalletIcon === icon ? 'bg-primary shadow-lg shadow-indigo-500/30' : 'bg-gray-50'}`}
                                     >
-                                        <Ionicons name={icon} size={24} color={newWalletIcon === icon ? 'white' : '#64748B'} />
+                                        <Ionicons name={icon as any} size={24} color={newWalletIcon === icon ? 'white' : '#64748B'} />
                                     </TouchableOpacity>
                                 ))}
                             </View>
