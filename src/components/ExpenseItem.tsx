@@ -14,45 +14,55 @@ const ExpenseItem: React.FC<ExpenseItemProps> = ({ item }) => {
     const isIncome = item.type === 'income';
 
     return (
-        <View className="flex-row items-center bg-white p-4 mb-3 rounded-2xl shadow-sm border border-gray-100">
-            {/* Icon Box */}
-            <View className={`p-3 rounded-xl mr-4 ${isIncome ? 'bg-emerald-50' : 'bg-rose-50'}`}>
+        <View className="flex-row bg-white p-4 mb-3 rounded-3xl shadow-sm shadow-gray-200/50 border border-gray-50 items-center">
+            {/* 1. Icon Box (Updated Style) */}
+            <View className={`w-12 h-12 rounded-2xl items-center justify-center mr-4 ${isIncome ? 'bg-emerald-50' : 'bg-rose-50'
+                }`}>
                 <Ionicons
                     name={item.category.icon as any}
-                    size={24}
+                    size={22}
                     color={isIncome ? '#10B981' : '#F43F5E'}
                 />
             </View>
 
-            {/* Details */}
+            {/* 2. Main Content Area */}
             <View className="flex-1">
-                <Text className="font-bold text-gray-800 text-base mb-1" numberOfLines={1}>
-                    {item.category.name}
-                </Text>
+                {/* Top Row: Category Name & Amount */}
+                <View className="flex-row justify-between items-start mb-1">
+                    <Text className="font-bold text-gray-800 text-[15px] flex-1 mr-2" numberOfLines={1}>
+                        {item.category.name}
+                    </Text>
+                    <Text className={`font-extrabold text-[15px] tracking-tight ${isIncome ? 'text-emerald-500' : 'text-rose-500'
+                        }`}>
+                        {isIncome ? '+' : '-'} {isBalanceHidden ? '••••••' : formatCurrency(item.amount)}
+                    </Text>
+                </View>
+
+                {/* Optional Note Row */}
                 {item.note ? (
-                    <Text className="text-gray-400 text-xs mb-1" numberOfLines={1}>
+                    <Text className="text-gray-400 text-xs mb-1.5 leading-relaxed" numberOfLines={1}>
                         {item.note}
                     </Text>
                 ) : null}
-                <View className="flex-row items-center">
-                    <Text className="text-gray-400 text-xs mr-2">
+
+                {/* Bottom Row: Date & Wallet Badge */}
+                <View className="flex-row items-center mt-0.5">
+                    {/* Date */}
+                    <Text className="text-gray-400 text-[11px] font-medium mr-3">
                         {formatDate(item.date)}
                     </Text>
+
+                    {/* Wallet Badge */}
                     {item.wallet && (
-                        <View className="bg-gray-100 px-2 py-0.5 rounded-md flex-row items-center">
-                            <Ionicons name={item.wallet.icon as any || "wallet-outline"} size={10} color="#6B7280" />
-                            <Text className="text-gray-500 text-[10px] ml-1 font-medium">
+                        <View className="bg-gray-50 border border-gray-100 px-2 py-0.5 rounded-lg flex-row items-center self-start">
+                            <Ionicons name={item.wallet.icon as any || "wallet-outline"} size={10} color="#9CA3AF" />
+                            <Text className="text-gray-500 text-[10px] ml-1.5 font-medium" numberOfLines={1}>
                                 {item.wallet.name}
                             </Text>
                         </View>
                     )}
                 </View>
             </View>
-
-            {/* Amount */}
-            <Text className={`font-extrabold text-lg tracking-tight ${isIncome ? 'text-emerald-500' : 'text-rose-500'}`}>
-                {isIncome ? '+' : '-'} {isBalanceHidden ? '••••••' : formatCurrency(item.amount)}
-            </Text>
         </View>
     );
 };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView, Modal, FlatList, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView, Modal, FlatList, Platform, KeyboardAvoidingView } from 'react-native';
 import useExpenseStore from '../context/useExpenseStore';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
@@ -32,6 +32,7 @@ const AddExpenseScreen = ({ navigation, route }: any) => {
     const expenseCategories = categories.filter(c => c.type === 'expense');
 
     useEffect(() => {
+        // Reset category when type changes, but keep wallet if possible
         setSelectedCategory(null);
         if (wallets.length > 0 && !selectedWallet) {
             setSelectedWallet(wallets[0]);
@@ -118,7 +119,7 @@ const AddExpenseScreen = ({ navigation, route }: any) => {
         <TouchableOpacity
             key={item.id}
             onPress={onPress}
-            className={`mr-3 mb-3 px-4 py-2  flex-row items-center border ${isSelected
+            className={`mr-3 px-4 py-2 rounded-2xl flex-row items-center border ${isSelected
                 ? colorClass
                 : 'bg-white border-gray-200'
                 }`}
@@ -130,41 +131,62 @@ const AddExpenseScreen = ({ navigation, route }: any) => {
         </TouchableOpacity>
     );
 
-    return (
-        <View className="flex-1 bg-black/50 justify-end">
-            <TouchableOpacity className="flex-1" onPress={() => navigation.goBack()} />
-            <View className="bg-white max-h-[90%] rounded-t-3xl overflow-hidden shadow-2xl">
-                <View className="p-4 flex-row justify-between items-center border-b border-gray-100">
-                    <Text className="text-xl font-bold text-gray-800">
-                        {type === 'income' ? 'Tambah Pemasukan' : 'Tambah Pengeluaran'}
-                    </Text>
-                    <TouchableOpacity onPress={() => navigation.goBack()} className="p-2">
-                        <Ionicons name="close" size={24} color="black" />
-                    </TouchableOpacity>
-                </View>
+    const isFormValid = amount && selectedWallet && selectedCategory;
 
-                <ScrollView className="p-6">
-                    <View className="mb-6">
-                        <Text className="text-gray-600 font-medium mb-2">Jumlah (Rp)</Text>
-                        <TextInput
-                            className={`w-full bg-gray-50 p-4  text-3xl font-bold border border-gray-200 focus:border-primary ${type === 'income' ? 'text-green-600' : 'text-red-600'}`}
-                            placeholder="0"
-                            keyboardType="numeric"
-                            value={amount}
-                            onChangeText={handleAmountChange}
-                            autoFocus={true}
-                        />
+    return (
+        <View className="flex-1 bg-black/50 justify-center items-center p-4">
+            <TouchableOpacity
+                className="absolute inset-0"
+                onPress={() => navigation.goBack()}
+                activeOpacity={1}
+            />
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
+                className="w-full max-h-[85%]"
+            >
+                <View className="bg-white rounded-3xl overflow-hidden shadow-2xl w-full android:elevation-10">
+                    {/* Header */}
+                    <View className="px-6 py-4 flex-row justify-between items-center border-b border-gray-100">
+                        <Text className="text-xl font-bold text-gray-800">
+                            {type === 'income' ? 'Tambah Pemasukan' : 'Tambah Pengeluaran'}
+                        </Text>
+                        <TouchableOpacity onPress={() => navigation.goBack()}>
+                            <Ionicons name="close" size={24} color="#374151" />
+                        </TouchableOpacity>
                     </View>
 
-                    <View className="mb-6">
-                        <Text className="text-gray-600 font-medium mb-2">Tanggal</Text>
-                        <TouchableOpacity
-                            className="w-full bg-gray-50 p-4  border border-gray-200 flex-row items-center"
-                            onPress={() => setShowDatePicker(true)}
-                        >
-                            <Ionicons name="calendar" size={22} color="#4B5563" className="mr-3" />
-                            <Text className="ml-3 text-gray-800 text-base">{formatDate(date.toISOString())}</Text>
-                        </TouchableOpacity>
+                    <ScrollView className="p-6" keyboardShouldPersistTaps="handled">
+                        {/* 1. Main Input Area: Amount & Date */}
+                        <View className="flex-row items-start mb-6 w-full">
+                            {/* Amount Input */}
+                            <View className="flex-1 mr-3">
+                                <Text className="text-gray-400 text-xs font-bold mb-1.5 uppercase tracking-wider">Nominal</Text>
+                                <TextInput
+                                    className="w-full bg-gray-50 p-3 h-14 rounded-2xl text-xl font-bold border border-gray-200 focus:border-primary text-primary"
+                                    placeholder="0"
+                                    keyboardType="numeric"
+                                    value={amount}
+                                    onChangeText={handleAmountChange}
+                                    autoFocus={true}
+                                />
+                            </View>
+
+                            {/* Date Button (Compact) */}
+                            <View>
+                                <Text className="text-gray-400 text-xs font-bold mb-1.5 uppercase tracking-wider">Tanggal</Text>
+                                <TouchableOpacity
+                                    className="bg-gray-50 p-3 rounded-2xl border border-gray-200 items-center justify-center h-14 w-14"
+                                    onPress={() => setShowDatePicker(true)}
+                                >
+                                    <View className="items-center">
+                                        <Text className="text-xs font-bold text-gray-800">{date.getDate()}</Text>
+                                        <Text className="text-[10px] text-gray-500">{date.toLocaleString('default', { month: 'short' })}</Text>
+                                    </View>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+
+                        {/* Date Picker Logic */}
                         {showDatePicker && Platform.OS === 'android' && (
                             <DateTimePicker
                                 value={date}
@@ -173,7 +195,6 @@ const AddExpenseScreen = ({ navigation, route }: any) => {
                                 onChange={onDateChange}
                             />
                         )}
-
                         {Platform.OS === 'ios' && (
                             <Modal
                                 transparent={true}
@@ -182,174 +203,157 @@ const AddExpenseScreen = ({ navigation, route }: any) => {
                                 onRequestClose={() => setShowDatePicker(false)}
                             >
                                 <TouchableOpacity
-                                    className="flex-1 justify-center items-center bg-black/50"
+                                    className="flex-1 justify-center items-center bg-black/60"
                                     activeOpacity={1}
                                     onPress={() => setShowDatePicker(false)}
                                 >
-                                    <View
-                                        className="bg-white m-5 p-4  w-[90%] shadow-xl"
-                                        onStartShouldSetResponder={() => true}
-                                    >
-                                        <DateTimePicker
-                                            value={date}
-                                            mode="date"
-                                            display="inline"
-                                            onChange={onDateChange}
-                                            themeVariant="light"
-                                        />
-                                        <TouchableOpacity
-                                            onPress={() => setShowDatePicker(false)}
-                                            className="mt-2 p-3 bg-gray-100  items-center"
-                                        >
-                                            <Text className="font-bold text-gray-700">Tutup</Text>
-                                        </TouchableOpacity>
+                                    <View className="bg-white w-[85%] rounded-3xl shadow-2xl overflow-hidden android:elevation-10" onStartShouldSetResponder={() => true}>
+                                        <View className="px-5 py-4 flex-row justify-between items-center bg-primary">
+                                            <Text className="text-lg font-bold text-white">Pilih Tanggal</Text>
+                                            <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                                                <Ionicons name="close-circle" size={24} color="white" />
+                                            </TouchableOpacity>
+                                        </View>
+
+                                        <View className="p-2">
+                                            <DateTimePicker
+                                                value={date}
+                                                mode="date"
+                                                display="inline"
+                                                onChange={onDateChange}
+                                                themeVariant="light"
+                                                accentColor="#343B71"
+                                            />
+                                        </View>
+
+                                        <View className="p-5 pt-0">
+                                            <TouchableOpacity
+                                                onPress={() => setShowDatePicker(false)}
+                                                className="py-3.5 rounded-2xl items-center shadow-sm active:opacity-90 bg-primary android:elevation-3"
+                                            >
+                                                <Text className="font-bold text-white text-base">Konfirmasi</Text>
+                                            </TouchableOpacity>
+                                        </View>
                                     </View>
                                 </TouchableOpacity>
                             </Modal>
                         )}
-                    </View>
 
-                    {type === 'expense' ? (
-                        <>
-                            <View className="mb-6">
-                                <Text className="text-gray-600 font-medium mb-3">Sumber Dana (Dompet)</Text>
-                                <View className="flex-row flex-wrap">
-                                    {wallets.map(wallet =>
-                                        renderPill(
-                                            wallet,
-                                            selectedWallet?.id === wallet.id,
-                                            () => setSelectedWallet(wallet),
-                                            'bg-blue-100 border-blue-500'
-                                        )
-                                    )}
-                                </View>
-                            </View>
 
-                            <View className="mb-6">
-                                <Text className="text-gray-600 font-medium mb-3">Kategori Pengeluaran</Text>
-                                <View className="flex-row flex-wrap">
-                                    {expenseCategories.map(cat =>
-                                        renderPill(
-                                            cat,
-                                            selectedCategory?.id === cat.id,
-                                            () => setSelectedCategory(cat),
-                                            'bg-red-100 border-red-500'
-                                        )
-                                    )}
-                                    <TouchableOpacity
-                                        onPress={() => setModalVisible(true)}
-                                        className="mr-3 mb-3 px-4 py-2  flex-row items-center border border-dashed border-gray-300 bg-gray-50"
-                                    >
-                                        <Ionicons name="add" size={18} color="#6B7280" />
-                                        <Text className="ml-2 font-medium text-gray-500">Tambah</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
-                        </>
-                    ) : (
-                        <>
-                            <View className="mb-6">
-                                <Text className="text-gray-600 font-medium mb-3">Sumber Pemasukan</Text>
-                                <View className="flex-row flex-wrap">
-                                    {incomeCategories.map(cat =>
-                                        renderPill(
-                                            cat,
-                                            selectedCategory?.id === cat.id,
-                                            () => setSelectedCategory(cat),
-                                            'bg-green-100 border-green-500'
-                                        )
-                                    )}
-                                    <TouchableOpacity
-                                        onPress={() => setModalVisible(true)}
-                                        className="mr-3 mb-3 px-4 py-2  flex-row items-center border border-dashed border-gray-300 bg-gray-50"
-                                    >
-                                        <Ionicons name="add" size={18} color="#6B7280" />
-                                        <Text className="ml-2 font-medium text-gray-500">Tambah</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
+                        {/* 2. Wallets (Horizontal Scroll) */}
+                        <View className="mb-6">
+                            <Text className="text-gray-400 text-xs font-bold mb-2 uppercase tracking-wider">
+                                {type === 'income' ? 'Masuk ke Dompet' : 'Sumber Dana'}
+                            </Text>
+                            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
+                                {wallets.map(wallet =>
+                                    renderPill(
+                                        wallet,
+                                        selectedWallet?.id === wallet.id,
+                                        () => setSelectedWallet(wallet),
+                                        'bg-indigo-50 border-primary'
+                                    )
+                                )}
+                            </ScrollView>
+                        </View>
 
-                            <View className="mb-6">
-                                <Text className="text-gray-600 font-medium mb-3">Masuk ke Dompet</Text>
-                                <View className="flex-row flex-wrap">
-                                    {wallets.map(wallet =>
-                                        renderPill(
-                                            wallet,
-                                            selectedWallet?.id === wallet.id,
-                                            () => setSelectedWallet(wallet),
-                                            'bg-blue-100 border-blue-500'
-                                        )
-                                    )}
-                                </View>
-                            </View>
-                        </>
-                    )}
+                        {/* 3. Categories (Horizontal Scroll) */}
+                        <View className="mb-6">
+                            <Text className="text-gray-400 text-xs font-bold mb-2 uppercase tracking-wider">Kategori</Text>
+                            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
+                                {(type === 'expense' ? expenseCategories : incomeCategories).map(cat =>
+                                    renderPill(
+                                        cat,
+                                        selectedCategory?.id === cat.id,
+                                        () => setSelectedCategory(cat),
+                                        'bg-indigo-50 border-primary'
+                                    )
+                                )}
+                                <TouchableOpacity
+                                    onPress={() => setModalVisible(true)}
+                                    className="mr-3 px-4 py-2 rounded-2xl flex-row items-center border border-dashed border-gray-300 bg-gray-50"
+                                >
+                                    <Ionicons name="add" size={18} color="#6B7280" />
+                                    <Text className="ml-2 font-medium text-gray-500">Baru</Text>
+                                </TouchableOpacity>
+                            </ScrollView>
+                        </View>
 
-                    <View className="mb-8">
-                        <Text className="text-gray-600 font-medium mb-2">Catatan (Opsional)</Text>
-                        <TextInput
-                            className="w-full bg-gray-50 p-4  text-base text-gray-800 border border-gray-200 focus:border-primary"
-                            placeholder="Tulis catatan disini..."
-                            value={note}
-                            onChangeText={setNote}
-                            multiline
-                        />
+                        {/* 4. Note Input */}
+                        <View className="mb-8">
+                            <Text className="text-gray-400 text-xs font-bold mb-2 uppercase tracking-wider">Catatan</Text>
+                            <TextInput
+                                className="w-full bg-gray-50 p-4 rounded-2xl text-base text-gray-800 border border-gray-200 focus:border-primary"
+                                placeholder="Tulis catatan (opsional)..."
+                                value={note}
+                                onChangeText={setNote}
+                            />
+                        </View>
+
+                        {/* 5. Save Button (Inside ScrollView, validating form) */}
                         <TouchableOpacity
-                            className={`py-4 rounded-xl items-center shadow-lg active:opacity-90 mt-4 ${type === 'income' ? 'bg-green-600' : 'bg-red-600'}`}
+                            disabled={!isFormValid}
+                            className={`w-full py-4 rounded-2xl items-center shadow-md mb-6 android:elevation-5 ${!isFormValid
+                                ? 'bg-gray-200'
+                                : 'bg-primary'
+                                }`}
                             onPress={handleSubmit}
                         >
-                            <Text className="text-white text-lg font-bold">
+                            <Text className={`font-bold text-lg ${!isFormValid ? 'text-gray-400' : 'text-white'}`}>
                                 {type === 'income' ? 'Simpan Pemasukan' : 'Simpan Pengeluaran'}
                             </Text>
                         </TouchableOpacity>
-                    </View>
-                </ScrollView>
 
-                <Modal
-                    animationType="slide"
-                    transparent={true}
-                    visible={modalVisible}
-                    onRequestClose={() => setModalVisible(false)}
-                >
-                    <View className="flex-1 justify-end bg-black/50">
-                        <View className="bg-white  p-6 h-[80%]">
-                            <View className="flex-row justify-between items-center mb-6">
-                                <Text className="text-xl font-bold text-gray-800">Tambah Kategori Baru</Text>
-                                <TouchableOpacity onPress={() => setModalVisible(false)}>
-                                    <Ionicons name="close" size={24} color="#374151" />
+                    </ScrollView>
+
+                    {/* Add Category Modal */}
+                    <Modal
+                        animationType="slide"
+                        transparent={true}
+                        visible={modalVisible}
+                        onRequestClose={() => setModalVisible(false)}
+                    >
+                        <View className="flex-1 justify-end bg-black/50">
+                            <View className="bg-white rounded-t-3xl p-6 h-[80%]">
+                                <View className="flex-row justify-between items-center mb-6">
+                                    <Text className="text-xl font-bold text-gray-800">Kategori Baru</Text>
+                                    <TouchableOpacity onPress={() => setModalVisible(false)}>
+                                        <Ionicons name="close" size={24} color="#374151" />
+                                    </TouchableOpacity>
+                                </View>
+
+                                <Text className="text-gray-600 font-medium mb-2">Nama Kategori</Text>
+                                <TextInput
+                                    className="bg-gray-50 p-4 rounded-xl border border-gray-200 mb-6 focus:border-primary"
+                                    placeholder="Contoh: Belanja, Gaji, dll"
+                                    value={newCategoryName}
+                                    onChangeText={setNewCategoryName}
+                                />
+
+                                <Text className="text-gray-600 font-medium mb-2">Pilih Ikon</Text>
+                                <View className="flex-1">
+                                    <FlatList
+                                        data={availableIcons}
+                                        renderItem={renderIconItem}
+                                        keyExtractor={item => item}
+                                        numColumns={5}
+                                        contentContainerStyle={{ alignItems: 'center', paddingBottom: 20 }}
+                                        showsVerticalScrollIndicator={false}
+                                    />
+                                </View>
+
+                                <TouchableOpacity
+                                    className="bg-primary py-4 rounded-xl items-center mt-4"
+                                    onPress={handleAddCategory}
+                                >
+                                    <Text className="text-white font-bold text-lg">Buat Kategori</Text>
                                 </TouchableOpacity>
                             </View>
-
-                            <Text className="text-gray-600 font-medium mb-2">Nama Kategori</Text>
-                            <TextInput
-                                className="bg-gray-50 p-4  border border-gray-200 mb-6 focus:border-primary"
-                                placeholder="Contoh: Liburan, Freelance, dll"
-                                value={newCategoryName}
-                                onChangeText={setNewCategoryName}
-                            />
-
-                            <Text className="text-gray-600 font-medium mb-2">Pilih Ikon</Text>
-                            <View className="flex-1">
-                                <FlatList
-                                    data={availableIcons}
-                                    renderItem={renderIconItem}
-                                    keyExtractor={item => item}
-                                    numColumns={5}
-                                    contentContainerStyle={{ alignItems: 'center', paddingBottom: 20 }}
-                                    showsVerticalScrollIndicator={false}
-                                />
-                            </View>
-
-                            <TouchableOpacity
-                                className="bg-primary py-4 rounded-xl items-center mt-4"
-                                onPress={handleAddCategory}
-                            >
-                                <Text className="text-white font-bold text-lg">Buat Kategori</Text>
-                            </TouchableOpacity>
                         </View>
-                    </View>
-                </Modal>
-            </View>
+                    </Modal>
+
+                </View>
+            </KeyboardAvoidingView>
         </View>
     );
 };

@@ -1,6 +1,5 @@
-import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { NavigationContainer } from '@react-navigation/native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { View } from 'react-native';
 
@@ -11,24 +10,18 @@ import AddExpenseScreen from '../screens/AddExpenseScreen';
 import PocketsScreen from '../screens/PocketsScreen';
 import SearchScreen from '../screens/SearchScreen';
 
-const Tab = createMaterialTopTabNavigator();
+const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
 const MainTabs = () => {
     return (
         <Tab.Navigator
-            tabBarPosition="bottom"
             screenOptions={{
-                swipeEnabled: true,
-                animationEnabled: true,
+                headerShown: false,
                 tabBarActiveTintColor: '#343B71',
                 tabBarInactiveTintColor: '#A0A3BD',
-                tabBarIndicatorStyle: {
-                    height: 0,
-                    backgroundColor: 'transparent',
-                },
                 tabBarStyle: {
-                    height: 80,
+                    height: 90,
                     backgroundColor: '#FFFFFF',
                     borderTopWidth: 0,
                     elevation: 20,
@@ -36,20 +29,15 @@ const MainTabs = () => {
                     shadowOffset: { width: 0, height: -4 },
                     shadowOpacity: 0.05,
                     shadowRadius: 10,
-                    borderTopLeftRadius: 25,
-                    borderTopRightRadius: 25,
-                    paddingBottom: 10,
+                    borderTopLeftRadius: 30,
+                    borderTopRightRadius: 30,
                     paddingTop: 10,
-                    overflow: 'hidden',
                 },
                 tabBarLabelStyle: {
-                    fontSize: 10,
+                    fontSize: 11,
                     fontWeight: 'bold',
-                    textTransform: 'none',
-                    marginTop: 0,
+                    marginBottom: 10,
                 },
-                tabBarPressColor: 'transparent',
-                tabBarShowIcon: true,
             }}
         >
             <Tab.Screen
@@ -100,30 +88,28 @@ const MainTabs = () => {
                     ),
                 }}
             />
-        </Tab.Navigator>
+        </Tab.Navigator >
     );
 };
 
 const AppNavigator = () => {
     return (
-        <NavigationContainer>
-            <Stack.Navigator screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="MainTabs" component={MainTabs} />
-                <Stack.Screen
-                    name="PocketDetail"
-                    component={PocketDetailScreen}
-                    options={{ animation: 'slide_from_right' }}
-                />
-                <Stack.Screen
-                    name="AddExpense"
-                    component={AddExpenseScreen}
-                    options={{
-                        presentation: 'transparentModal',
-                        animation: 'slide_from_bottom',
-                    }}
-                />
-            </Stack.Navigator>
-        </NavigationContainer>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="MainTabs" component={MainTabs} />
+            <Stack.Screen
+                name="PocketDetail"
+                component={PocketDetailScreen}
+                options={{ animation: 'slide_from_right' }}
+            />
+            <Stack.Screen
+                name="AddExpense"
+                component={AddExpenseScreen}
+                options={{
+                    presentation: 'transparentModal',
+                    animation: 'slide_from_bottom',
+                }}
+            />
+        </Stack.Navigator>
     );
 };
 

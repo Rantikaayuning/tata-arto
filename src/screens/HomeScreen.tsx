@@ -27,15 +27,18 @@ const HomeScreen = ({ navigation }: any) => {
 
     // For Modal Logic
     const [tempYear, setTempYear] = useState(getYear(new Date()));
+    const [tempMonth, setTempMonth] = useState(new Date().getMonth());
     const yearListRef = useRef<FlatList>(null);
+    const monthListRef = useRef<FlatList>(null);
 
     const handleOpenModal = () => {
         setTempYear(getYear(selectedDate));
+        setTempMonth(selectedDate.getMonth());
         setMonthModalVisible(true);
     };
 
-    const handleSelectMonth = (monthIndex: number) => {
-        const newDate = setMonth(setYear(selectedDate, tempYear), monthIndex);
+    const handleConfirmSelection = () => {
+        const newDate = setMonth(setYear(selectedDate, tempYear), tempMonth);
         setSelectedDate(newDate);
         setMonthModalVisible(false);
     };
@@ -52,16 +55,20 @@ const HomeScreen = ({ navigation }: any) => {
     }, []);
 
     // Scroll to selected year when modal opens
+    // Scroll to selected items when modal opens
     useEffect(() => {
-        if (isMonthModalVisible && yearListRef.current) {
-            const index = availableYears.indexOf(tempYear);
-            if (index !== -1) {
-                setTimeout(() => {
-                    yearListRef.current?.scrollToIndex({ index, animated: false, viewPosition: 0.5 });
-                }, 100);
-            }
+        if (isMonthModalVisible) {
+            setTimeout(() => {
+                const yearIndex = availableYears.indexOf(tempYear);
+                if (yearIndex !== -1 && yearListRef.current) {
+                    yearListRef.current.scrollToOffset({ offset: yearIndex * 50, animated: false });
+                }
+                if (monthListRef.current) {
+                    monthListRef.current.scrollToOffset({ offset: tempMonth * 50, animated: false });
+                }
+            }, 300);
         }
-    }, [isMonthModalVisible, tempYear, availableYears]);
+    }, [isMonthModalVisible]);
 
 
     // FAB Expand/Collapse Animation
@@ -260,7 +267,7 @@ const HomeScreen = ({ navigation }: any) => {
                     <SectionList
                         sections={groupedExpenses}
                         contentContainerStyle={{ paddingBottom: 100 }}
-                        keyExtractor={(item) => item.id || Math.random().toString()}
+                        keyExtractor={(item, index) => item.id || index.toString()}
                         renderItem={({ item }) => <ExpenseItem item={item} />}
                         renderSectionHeader={({ section: { title } }) => (
                             <Text className="text-gray-400 font-bold text-xs uppercase tracking-widest mt-6 mb-3 pl-1">{title}</Text>
@@ -316,51 +323,93 @@ const HomeScreen = ({ navigation }: any) => {
                         className="flex-1 bg-black/60 justify-center items-center p-6"
                         onPress={() => setMonthModalVisible(false)}
                     >
-                        <View className="bg-white rounded-2xl w-full max-w-sm overflow-hidden p-4 shadow-2xl android:elevation-20">
-                            <View className="flex-row justify-between items-center mb-6 px-2">
-                                <Text className="text-lg font-bold text-gray-800">Pilih Periode</Text>
-                                <TouchableOpacity onPress={() => setMonthModalVisible(false)} className="p-1 bg-gray-100 rounded-full">
-                                    <Ionicons name="close" size={20} color="#374151" />
+                        <View className="bg-white rounded-2xl w-[90%] overflow-hidden p-6 shadow-2xl android:elevation-20 items-center">
+                            <View className="flex-row justify-between items-center mb-6 w-full">
+                                <Text className="text-xl font-bold text-primary">Pilih Periode</Text>
+                                <TouchableOpacity onPress={() => setMonthModalVisible(false)}>
+                                    <Ionicons name="close" size={24} color="#9CA3AF" />
                                 </TouchableOpacity>
                             </View>
 
-                            {/* Year Selector (Horizontal) */}
-                            <View className="mb-6 h-[50px]">
-                                <FlatList
-                                    ref={yearListRef}
-                                    data={availableYears}
-                                    horizontal
-                                    showsHorizontalScrollIndicator={false}
-                                    keyExtractor={(item) => item.toString()}
-                                    renderItem={renderYearItem}
-                                    contentContainerStyle={{ paddingHorizontal: 4 }}
-                                    getItemLayout={(data, index) => (
-                                        { length: ITEM_WIDTH + 8, offset: (ITEM_WIDTH + 8) * index, index }
-                                    )}
-                                    initialNumToRender={10}
-                                />
+                            {/* Wheel Pickers Container */}
+                            <View
+                                className="flex-row h-[150px] w-full mb-6 relative"
+                                key={isMonthModalVisible.toString()}
+                            >
+                                {/* Selection Overlay (Center Highlight) */}
+                                <View className="absolute top-[50px] left-0 right-0 h-[50px] border-t border-b border-gray-200 bg-gray-50 -z-10 rounded-lg" pointerEvents="none" />
+
+                                {/* Month Picker */}
+                                <View className="flex-1 mr-2">
+                                    <FlatList
+                                        ref={monthListRef}
+                                        data={monthsNames}
+                                        keyExtractor={(_, i) => i.toString()}
+                                        showsVerticalScrollIndicator={false}
+                                        snapToInterval={50}
+                                        decelerationRate="fast"
+                                        contentContainerStyle={{ paddingVertical: 50 }}
+                                        getItemLayout={(_, index) => ({ length: 50, offset: 50 * index, index })}
+                                        initialScrollIndex={tempMonth}
+                                        onMomentumScrollEnd={(e) => {
+                                            const index = Math.round(e.nativeEvent.contentOffset.y / 50);
+                                            if (index >= 0 && index < monthsNames.length) setTempMonth(index);
+                                        }}
+                                        renderItem={({ item, index }) => (
+                                            <TouchableOpacity
+                                                style={{ height: 50, justifyContent: 'center', alignItems: 'center' }}
+                                                onPress={() => {
+                                                    setTempMonth(index);
+                                                    monthListRef.current?.scrollToIndex({ index, animated: true, viewPosition: 0.5 });
+                                                }}
+                                            >
+                                                <Text className={`text-lg ${tempMonth === index ? 'font-bold text-primary' : 'text-gray-400'}`}>
+                                                    {item}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        )}
+                                    />
+                                </View>
+
+                                {/* Year Picker */}
+                                <View className="flex-1 ml-2">
+                                    <FlatList
+                                        ref={yearListRef}
+                                        data={availableYears}
+                                        keyExtractor={(item) => item.toString()}
+                                        showsVerticalScrollIndicator={false}
+                                        snapToInterval={50}
+                                        decelerationRate="fast"
+                                        contentContainerStyle={{ paddingVertical: 50 }}
+                                        getItemLayout={(_, index) => ({ length: 50, offset: 50 * index, index })}
+                                        initialScrollIndex={availableYears.indexOf(tempYear)}
+                                        onMomentumScrollEnd={(e) => {
+                                            const index = Math.round(e.nativeEvent.contentOffset.y / 50);
+                                            if (index >= 0 && index < availableYears.length) setTempYear(availableYears[index]);
+                                        }}
+                                        renderItem={({ item, index }) => (
+                                            <TouchableOpacity
+                                                style={{ height: 50, justifyContent: 'center', alignItems: 'center' }}
+                                                onPress={() => {
+                                                    setTempYear(item);
+                                                    yearListRef.current?.scrollToIndex({ index, animated: true, viewPosition: 0.5 });
+                                                }}
+                                            >
+                                                <Text className={`text-lg ${tempYear === item ? 'font-bold text-primary' : 'text-gray-400'}`}>
+                                                    {item}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        )}
+                                    />
+                                </View>
                             </View>
 
-                            {/* Month Grid */}
-                            <View className="flex-row flex-wrap justify-between">
-                                {monthsNames.map((monthName, index) => {
-                                    const isSelected = getYear(selectedDate) === tempYear && new Date(selectedDate).getMonth() === index;
-                                    return (
-                                        <TouchableOpacity
-                                            key={index}
-                                            onPress={() => handleSelectMonth(index)}
-                                            className={`w-[30%] py-3 mb-3 rounded-xl items-center justify-center border ${isSelected
-                                                ? 'bg-primary/10 border-primary'
-                                                : 'bg-white border-gray-100'
-                                                }`}
-                                        >
-                                            <Text className={`font-medium ${isSelected ? 'text-primary' : 'text-gray-600'}`}>
-                                                {monthName}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    );
-                                })}
-                            </View>
+                            <TouchableOpacity
+                                onPress={handleConfirmSelection}
+                                className="w-full bg-primary py-4 rounded-xl items-center shadow-md active:opacity-90 android:elevation-5"
+                            >
+                                <Text className="text-white font-bold text-lg">Pilih Periode</Text>
+                            </TouchableOpacity>
                         </View>
                     </Pressable>
                 </Modal>

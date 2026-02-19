@@ -78,7 +78,7 @@ const PocketDetailScreen = () => {
 
                     <FlatList
                         data={walletExpenses}
-                        keyExtractor={item => item.id || Math.random().toString()}
+                        keyExtractor={(item, index) => item.id || index.toString()}
                         renderItem={({ item }) => <ExpenseItem item={item} />}
                         showsVerticalScrollIndicator={false}
                         contentContainerStyle={{ paddingBottom: 100 }}

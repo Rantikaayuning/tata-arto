@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, Modal, ScrollView, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, FlatList, Modal, ScrollView, Platform, Dimensions, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import useExpenseStore from '../context/useExpenseStore';
@@ -16,32 +16,27 @@ const SearchScreen = ({ navigation }: any) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<Category | null>(null); // null means 'All'
 
-    // Date Filter State
-    const [dateFilterType, setDateFilterType] = useState<'all' | 'specific'>('all'); // 'all', 'specific'
+    // Filter State
+    const [dateFilterType, setDateFilterType] = useState<'all' | 'specific'>('all');
     const [specificDate, setSpecificDate] = useState(new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
-
-    // Filter Modals
     const [showCategoryModal, setShowCategoryModal] = useState(false);
 
     const filteredExpenses = useMemo(() => {
-        // If no search query and no filters, return empty
-        if (!searchQuery.trim() && !selectedCategory && dateFilterType === 'all') {
-            return [];
-        }
+
+        // Removed early return to show all expenses by default
 
         return expenses.filter(expense => {
-            // 1. Note Search
+            // Note Search
             const noteMatch = (expense.note || '').toLowerCase().includes(searchQuery.toLowerCase());
-
             if (searchQuery.trim() && !noteMatch) return false;
 
-            // 2. Category Filter
+            // Category Filter
             if (selectedCategory && expense.category?.id !== selectedCategory.id) {
                 return false;
             }
 
-            // 3. Date Filter
+            // Date Filter
             const expenseDate = new Date(expense.date);
             if (dateFilterType === 'specific') {
                 const isSameDay =
@@ -64,31 +59,37 @@ const SearchScreen = ({ navigation }: any) => {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-background" edges={['top', 'left', 'right']}>
-            <View className="px-6 pt-4 pb-2">
-                <Text className="text-3xl font-extrabold text-primary tracking-tighter mb-6">Pencarian</Text>
+        <SafeAreaView className="flex-1 bg-[#F7F8FA]" edges={['top', 'left', 'right']}>
+            <View className="px-6 pt-4 pb-4 bg-white border-b border-gray-100 shadow-sm android:elevation-2 z-10">
+                <Text className="text-2xl font-extrabold text-primary tracking-tighter mb-4">Cari Transaksi</Text>
 
                 {/* Search Bar */}
-                <View className="flex-row items-center bg-white shadow-lg shadow-indigo-100/50 rounded-[20px] px-5 py-4 mb-6">
-                    <Ionicons name="search" size={24} color="#343B71" />
+                <View className="flex-row items-center bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3">
+                    <Ionicons name="search" size={20} color="#6B7280" />
                     <TextInput
-                        className="flex-1 ml-4 text-lg font-bold text-gray-800"
-                        placeholder="Cari catatan..."
+                        className="flex-1 ml-3 text-base font-bold text-gray-800"
+                        placeholder="Ketik catatan..."
                         placeholderTextColor="#9CA3AF"
                         value={searchQuery}
                         onChangeText={setSearchQuery}
                         autoFocus={false}
+                        returnKeyType="search"
                     />
                     {searchQuery.length > 0 && (
                         <TouchableOpacity onPress={() => setSearchQuery('')}>
-                            <Ionicons name="close-circle" size={24} color="#9CA3AF" />
+                            <Ionicons name="close-circle" size={20} color="#9CA3AF" />
                         </TouchableOpacity>
                     )}
                 </View>
 
-                {/* Filter Chips */}
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-2" contentContainerStyle={{ paddingBottom: 10 }}>
-                    {/* Date Filter Chip */}
+                {/* Filters Row */}
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    className="mt-4"
+                    contentContainerStyle={{ paddingBottom: 4 }}
+                >
+                    {/* Date Filter */}
                     <TouchableOpacity
                         onPress={() => {
                             if (dateFilterType === 'all') {
@@ -98,52 +99,43 @@ const SearchScreen = ({ navigation }: any) => {
                                 setDateFilterType('all');
                             }
                         }}
-                        className={`flex-row items-center px-5 py-2.5 rounded-full mr-3 border-0 ${dateFilterType === 'specific'
-                            ? 'bg-primary shadow-lg shadow-indigo-500/30'
-                            : 'bg-white shadow-sm shadow-indigo-100/30'
+                        className={`flex-row items-center px-4 py-2 rounded-full mr-3 border ${dateFilterType === 'specific'
+                            ? 'bg-primary border-primary shadow-sm'
+                            : 'bg-white border-gray-200'
                             }`}
                     >
-                        <Ionicons name="calendar-outline" size={18} color={dateFilterType === 'specific' ? 'white' : '#64748B'} />
-                        <Text className={`ml-2 font-bold text-xs uppercase tracking-wider ${dateFilterType === 'specific' ? 'text-white' : 'text-gray-500'}`}>
+                        <Ionicons name="calendar-outline" size={16} color={dateFilterType === 'specific' ? 'white' : '#64748B'} />
+                        <Text className={`ml-2 font-bold text-xs uppercase tracking-wider ${dateFilterType === 'specific' ? 'text-white' : 'text-gray-600'}`}>
                             {dateFilterType === 'specific' ? format(specificDate, 'dd MMM', { locale: id }) : 'Tanggal'}
                         </Text>
-                        {dateFilterType === 'specific' && (
-                            <View className="ml-2 bg-white/20 rounded-full p-0.5">
-                                <Ionicons name="close" size={10} color="white" />
-                            </View>
-                        )}
                     </TouchableOpacity>
 
-                    {/* Category Filter Chip */}
+                    {/* Category Filter */}
                     <TouchableOpacity
                         onPress={() => setShowCategoryModal(true)}
-                        className={`flex-row items-center px-5 py-2.5 rounded-full mr-3 border-0 ${selectedCategory
-                            ? 'bg-primary shadow-lg shadow-indigo-500/30'
-                            : 'bg-white shadow-sm shadow-indigo-100/30'
+                        className={`flex-row items-center px-4 py-2 rounded-full mr-3 border ${selectedCategory
+                            ? 'bg-primary border-primary shadow-sm'
+                            : 'bg-white border-gray-200'
                             }`}
                     >
-                        <Ionicons name="pricetag-outline" size={18} color={selectedCategory ? 'white' : '#64748B'} />
-                        <Text className={`ml-2 font-bold text-xs uppercase tracking-wider ${selectedCategory ? 'text-white' : 'text-gray-500'}`}>
+                        <Ionicons name="pricetag-outline" size={16} color={selectedCategory ? 'white' : '#64748B'} />
+                        <Text className={`ml-2 font-bold text-xs uppercase tracking-wider ${selectedCategory ? 'text-white' : 'text-gray-600'}`}>
                             {selectedCategory ? selectedCategory.name : 'Kategori'}
                         </Text>
-                        {selectedCategory && (
-                            <View className="ml-2 bg-white/20 rounded-full p-0.5">
-                                <Ionicons name="close" size={10} color="white" />
-                            </View>
-                        )}
                     </TouchableOpacity>
                 </ScrollView>
             </View>
 
-            {/* Content */}
-            <View className="flex-1 px-6">
-                <Text className="text-gray-400 font-bold text-xs uppercase tracking-widest mb-4 ml-1">
-                    {filteredExpenses.length} transaksi ditemukan
-                </Text>
+            {/* Results List */}
+            <View className="flex-1 px-6 pt-4">
+                <View className="flex-row justify-between items-center mb-4">
+                    <Text className="text-gray-400 font-bold text-xs uppercase tracking-widest ml-1">Hasil Pencarian</Text>
+                    <Text className="text-gray-400 font-bold text-xs uppercase tracking-widest">{filteredExpenses.length} item</Text>
+                </View>
 
                 <FlatList
                     data={filteredExpenses}
-                    keyExtractor={item => item.id || Math.random().toString()}
+                    keyExtractor={(item, index) => item.id || index.toString()}
                     renderItem={({ item }) => <ExpenseItem item={item} />}
                     contentContainerStyle={{ paddingBottom: 100 }}
                     showsVerticalScrollIndicator={false}
@@ -152,43 +144,59 @@ const SearchScreen = ({ navigation }: any) => {
                             <View className="w-20 h-20 bg-gray-100 rounded-full items-center justify-center mb-4">
                                 <Ionicons name="search" size={40} color="#CBD5E1" />
                             </View>
-                            <Text className="text-gray-400 text-sm font-bold uppercase tracking-wider text-center">Tidak ada hasil</Text>
+                            <Text className="text-gray-400 text-sm font-bold uppercase tracking-wider text-center">
+                                {searchQuery || selectedCategory || dateFilterType === 'specific' ? 'Tidak ditemukan' : 'Belum ada transaksi'}
+                            </Text>
                         </View>
                     }
                 />
             </View>
 
-            {/* Category Modal */}
+            {/* Category Modal (Revamped) */}
             <Modal
                 visible={showCategoryModal}
                 transparent={true}
-                animationType="slide"
+                animationType="fade"
                 onRequestClose={() => setShowCategoryModal(false)}
             >
                 <TouchableOpacity
-                    className="flex-1 bg-black/50 justify-end"
+                    className="flex-1 bg-black/60 justify-end"
                     activeOpacity={1}
                     onPress={() => setShowCategoryModal(false)}
                 >
-                    <View className="bg-white rounded-t-3xl p-6 h-[60%]">
-                        <Text className="text-xl font-bold text-gray-800 mb-4">Pilih Kategori</Text>
+                    <View className="bg-white rounded-t-[32px] max-h-[70%] overflow-hidden shadow-2xl android:elevation-20">
+                        <View className="px-6 py-4 flex-row justify-between items-center bg-primary">
+                            <Text className="text-lg font-bold text-white">Filter Kategori</Text>
+                            <TouchableOpacity onPress={() => setShowCategoryModal(false)}>
+                                <Ionicons name="close-circle" size={24} color="white" />
+                            </TouchableOpacity>
+                        </View>
+
+                        <Pressable onPress={() => { setSelectedCategory(null); setShowCategoryModal(false); }} className="p-4 border-b border-gray-100 flex-row items-center bg-gray-50">
+                            <View className="w-10 h-10 rounded-full bg-gray-200 items-center justify-center mr-3">
+                                <Ionicons name="grid" size={20} color="#6B7280" />
+                            </View>
+                            <Text className="text-gray-800 font-bold text-base">Semua Kategori</Text>
+                        </Pressable>
+
                         <FlatList
                             data={categories}
                             keyExtractor={item => item.id}
+                            contentContainerStyle={{ paddingBottom: 40 }}
                             renderItem={({ item }) => (
                                 <TouchableOpacity
-                                    className="flex-row items-center p-4 border-b border-gray-100"
+                                    className={`flex-row items-center p-4 border-b border-gray-50 ${selectedCategory?.id === item.id ? 'bg-indigo-50' : 'bg-white'}`}
                                     onPress={() => {
                                         setSelectedCategory(item);
                                         setShowCategoryModal(false);
                                     }}
                                 >
-                                    <View className={`p-2 rounded-full mr-3 ${item.type === 'income' ? 'bg-green-100' : 'bg-red-100'}`}>
-                                        <Ionicons name={item.icon as any} size={20} color={item.type === 'income' ? '#16A34A' : '#DC2626'} />
+                                    <View className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${item.type === 'income' ? 'bg-emerald-100' : 'bg-rose-100'}`}>
+                                        <Ionicons name={item.icon as any} size={20} color={item.type === 'income' ? '#10B981' : '#F43F5E'} />
                                     </View>
-                                    <Text className="text-gray-800 font-medium text-base">{item.name}</Text>
+                                    <Text className="text-gray-800 font-bold text-base flex-1">{item.name}</Text>
                                     {selectedCategory?.id === item.id && (
-                                        <Ionicons name="checkmark" size={20} color="#528567" className="ml-auto" />
+                                        <Ionicons name="checkmark-circle" size={24} color="#343B71" />
                                     )}
                                 </TouchableOpacity>
                             )}
@@ -197,46 +205,67 @@ const SearchScreen = ({ navigation }: any) => {
                 </TouchableOpacity>
             </Modal>
 
-            {/* Date Picker Modal (iOS/Android handling) */}
-            {dateFilterType === 'specific' && showDatePicker && (
-                Platform.OS === 'ios' ? (
-                    <Modal
-                        transparent={true}
-                        animationType="fade"
-                        visible={showDatePicker}
-                        onRequestClose={() => setShowDatePicker(false)}
+            {/* Date Picker Modal (Revamped) */}
+            {Platform.OS === 'ios' && (
+                <Modal
+                    transparent={true}
+                    animationType="fade"
+                    visible={showDatePicker}
+                    onRequestClose={() => setShowDatePicker(false)}
+                >
+                    <TouchableOpacity
+                        className="flex-1 justify-center items-center bg-black/60"
+                        activeOpacity={1}
+                        onPress={() => setShowDatePicker(false)}
                     >
-                        <TouchableOpacity
-                            className="flex-1 justify-center items-center bg-black/50"
-                            activeOpacity={1}
-                            onPress={() => setShowDatePicker(false)}
-                        >
-                            <View className="bg-white m-5 p-4 rounded-xl w-[90%] shadow-xl">
+                        <View className="bg-white w-[85%] rounded-[28px] shadow-2xl overflow-hidden android:elevation-10" onStartShouldSetResponder={() => true}>
+                            <View className="px-5 py-4 flex-row justify-between items-center bg-primary">
+                                <Text className="text-lg font-bold text-white">Filter Tanggal</Text>
+                                <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                                    <Ionicons name="close-circle" size={24} color="white" />
+                                </TouchableOpacity>
+                            </View>
+
+                            <View className="p-2">
                                 <DateTimePicker
                                     value={specificDate}
                                     mode="date"
                                     display="inline"
                                     onChange={onDateChange}
                                     themeVariant="light"
+                                    accentColor="#343B71"
                                 />
-                                <TouchableOpacity onPress={() => setShowDatePicker(false)} className="mt-2 p-3 bg-primary rounded-lg items-center">
-                                    <Text className="text-white font-bold">OK</Text>
+                            </View>
+
+                            <View className="p-5 pt-0">
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        // Ensure date is set (onChange handles it, but verify)
+                                        setDateFilterType('specific');
+                                        setShowDatePicker(false);
+                                    }}
+                                    className="py-3.5 rounded-2xl items-center shadow-sm active:opacity-90 bg-primary android:elevation-3"
+                                >
+                                    <Text className="font-bold text-white text-base">Terapkan Filter</Text>
                                 </TouchableOpacity>
                             </View>
-                        </TouchableOpacity>
-                    </Modal>
-                ) : (
-                    <DateTimePicker
-                        value={specificDate}
-                        mode="date"
-                        display="default"
-                        onChange={onDateChange}
-                    />
-                )
+                        </View>
+                    </TouchableOpacity>
+                </Modal>
             )}
 
+            {Platform.OS === 'android' && showDatePicker && (
+                <DateTimePicker
+                    value={specificDate}
+                    mode="date"
+                    display="default"
+                    onChange={onDateChange}
+                />
+            )}
         </SafeAreaView>
     );
 };
+
+
 
 export default SearchScreen;
