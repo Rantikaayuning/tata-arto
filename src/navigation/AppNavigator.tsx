@@ -13,6 +13,11 @@ import SearchScreen from '../screens/SearchScreen';
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
+import LoginScreen from '../screens/LoginScreen';
+import RegisterScreen from '../screens/RegisterScreen';
+import MembersScreen from '../screens/MembersScreen';
+import useExpenseStore from '../context/useExpenseStore';
+
 const MainTabs = () => {
     return (
         <Tab.Navigator
@@ -93,9 +98,21 @@ const MainTabs = () => {
 };
 
 const AppNavigator = () => {
+    const user = useExpenseStore((state) => state.user);
+
     return (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
             <Stack.Screen name="MainTabs" component={MainTabs} />
+            <Stack.Screen
+                name="Login"
+                component={LoginScreen}
+                options={{ animation: 'slide_from_bottom' }}
+            />
+            <Stack.Screen
+                name="Register"
+                component={RegisterScreen}
+                options={{ animation: 'slide_from_right' }}
+            />
             <Stack.Screen
                 name="PocketDetail"
                 component={PocketDetailScreen}
@@ -108,6 +125,11 @@ const AppNavigator = () => {
                     presentation: 'transparentModal',
                     animation: 'slide_from_bottom',
                 }}
+            />
+            <Stack.Screen
+                name="Members"
+                component={MembersScreen}
+                options={{ animation: 'slide_from_right' }}
             />
         </Stack.Navigator>
     );

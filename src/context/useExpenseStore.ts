@@ -1,13 +1,19 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Expense, Wallet, Category } from '../types';
+import { Expense, Wallet, Category, User } from '../types';
+
+
 
 interface ExpenseState {
     expenses: Expense[];
     wallets: Wallet[];
     categories: Category[];
     isBalanceHidden: boolean;
+
+    // Auth & Members
+    user: User | null;
+    members: User[];
 
     toggleBalanceVisibility: () => void;
     addExpense: (expense: Omit<Expense, 'id'>) => void;
@@ -17,11 +23,20 @@ interface ExpenseState {
     addCategory: (newCategory: Category) => void;
     getMonthlyExpenses: (month: number, year: number) => Expense[];
     resetAll: () => void;
+
+    // Auth Actions
+    login: (user: User) => void;
+    logout: () => void;
+    addMember: (member: User) => void;
 }
 
 const useExpenseStore = create<ExpenseState>()(
     persist(
         (set, get) => ({
+            user: null, // Initial Auth State
+            members: [
+                { id: 'user-1', name: 'Rantika', email: 'rantika@tataarto.com', role: 'admin', avatar: 'person' }
+            ],
             expenses: [],
             wallets: [
                 { id: '1', name: 'Dompet Utama', icon: 'wallet', type: 'wallet' },
@@ -113,7 +128,11 @@ const useExpenseStore = create<ExpenseState>()(
                         { id: 'inc3', name: 'Investasi', icon: 'trending-up', type: 'income' },
                     ]
                 });
-            }
+            },
+
+            login: (user) => set({ user }),
+            logout: () => set({ user: null }),
+            addMember: (member) => set((state) => ({ members: [...state.members, member] })),
         }),
         {
             name: 'expense-storage-v3',

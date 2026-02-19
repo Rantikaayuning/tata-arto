@@ -15,6 +15,7 @@ const PocketsScreen = () => {
     const addWallet = useExpenseStore((state) => state.addWallet);
     const addExpense = useExpenseStore((state) => state.addExpense);
     const resetAll = useExpenseStore((state) => state.resetAll);
+    const user = useExpenseStore((state) => state.user);
 
     const [modalVisible, setModalVisible] = useState(false);
     const [newWalletName, setNewWalletName] = useState('');
@@ -107,7 +108,13 @@ const PocketsScreen = () => {
         if (item.isAddButton) {
             return (
                 <TouchableOpacity
-                    onPress={() => setModalVisible(true)}
+                    onPress={() => {
+                        if (!user) {
+                            navigation.navigate('Login');
+                            return;
+                        }
+                        setModalVisible(true);
+                    }}
                     className="flex-1 bg-white/40 p-5 m-2 rounded-[24px] border-2 border-dashed border-gray-200 min-h-[160px] justify-center items-center max-w-[47%]"
                 >
                     <View className="w-12 h-12 rounded-full bg-gray-50 items-center justify-center mb-3">

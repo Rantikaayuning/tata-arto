@@ -19,6 +19,7 @@ interface Section {
 
 const HomeScreen = ({ navigation }: any) => {
     const expenses = useExpenseStore((state) => state.expenses) || [];
+    const user = useExpenseStore((state) => state.user);
     const [isFabOpen, setIsFabOpen] = useState(false);
 
     // Month Selection State
@@ -73,6 +74,10 @@ const HomeScreen = ({ navigation }: any) => {
 
     // FAB Expand/Collapse Animation
     const handleFabPress = () => {
+        if (!user) {
+            navigation.navigate('Login');
+            return;
+        }
         setIsFabOpen(!isFabOpen);
     };
 
@@ -153,6 +158,28 @@ const HomeScreen = ({ navigation }: any) => {
 
     const renderHeader = () => (
         <View className="mb-4 px-4 pt-4">
+            {/* Top Bar */}
+            <View className="flex-row justify-between items-center mb-6">
+                <View className="flex-row items-center">
+                    <View className="w-8 h-8 bg-primary rounded-xl items-center justify-center mr-2 shadow-sm shadow-indigo-200">
+                        <Ionicons name="wallet" size={16} color="white" />
+                    </View>
+                    <Text className="text-xl font-black text-primary tracking-tighter">tata arto.</Text>
+                </View>
+                <TouchableOpacity
+                    onPress={() => {
+                        if (!user) {
+                            navigation.navigate('Login');
+                            return;
+                        }
+                        navigation.navigate('Members');
+                    }}
+                    className="w-10 h-10 bg-white rounded-full items-center justify-center border border-gray-100 shadow-sm active:bg-gray-50"
+                >
+                    <Ionicons name="people" size={20} color="#343B71" />
+                </TouchableOpacity>
+            </View>
+
             {/* Minimalist Header */}
             <View className="items-center mb-4">
                 <View className="flex-row items-center mb-2">
