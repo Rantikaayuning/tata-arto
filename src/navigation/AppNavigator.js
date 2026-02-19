@@ -1,9 +1,9 @@
-import React from 'react';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { View } from 'react-native';
+import { View, Platform, StatusBar } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import HomeScreen from '../screens/HomeScreen';
 import MonthlyScreen from '../screens/MonthlyScreen';
@@ -11,45 +11,51 @@ import PocketDetailScreen from '../screens/PocketDetailScreen';
 import AddExpenseScreen from '../screens/AddExpenseScreen';
 import PocketsScreen from '../screens/PocketsScreen';
 import SearchScreen from '../screens/SearchScreen';
-const Tab = createBottomTabNavigator();
+
+const Tab = createMaterialTopTabNavigator();
 const Stack = createNativeStackNavigator();
 
 const MainTabs = () => {
     return (
         <Tab.Navigator
+            tabBarPosition="bottom"
             screenOptions={{
-                headerShown: false,
-                tabBarActiveTintColor: '#528567',
-                tabBarInactiveTintColor: '#9CA3AF',
-                tabBarItemStyle: {
-                    justifyContent: 'center',
-                    alignItems: 'center',
+                swipeEnabled: true,
+                animationEnabled: true,
+                tabBarActiveTintColor: '#343B71',
+                tabBarInactiveTintColor: '#A0A3BD',
+                tabBarIndicatorStyle: {
+                    height: 0,
+                    backgroundColor: 'transparent',
                 },
                 tabBarStyle: {
                     height: 80,
                     backgroundColor: '#FFFFFF',
                     borderTopWidth: 0,
-                    elevation: 0,
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: -2 },
+                    elevation: 20,
+                    shadowColor: '#343B71',
+                    shadowOffset: { width: 0, height: -4 },
                     shadowOpacity: 0.05,
                     shadowRadius: 10,
+                    borderTopLeftRadius: 25,
+                    borderTopRightRadius: 25,
+                    paddingBottom: 10,
                     paddingTop: 10,
-                    paddingBottom: 20,
+                    // Ensure content doesn't get clipped by rounded corners on Android if needed
+                    overflow: 'hidden',
                 },
                 tabBarLabelStyle: {
-                    fontSize: 12,
-                    fontWeight: '600',
-                    marginBottom: 5,
+                    fontSize: 10,
+                    fontWeight: 'bold',
+                    textTransform: 'none',
+                    marginTop: 0,
                 },
+                tabBarPressColor: 'transparent',
+                tabBarShowIcon: true,
                 tabBarIconStyle: {
-                    marginBottom: 0,
+                    width: 30,
+                    height: 30,
                 },
-                tabBarItemStyle: {
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    paddingVertical: 4,
-                }
             }}
         >
             <Tab.Screen
@@ -57,9 +63,9 @@ const MainTabs = () => {
                 component={HomeScreen}
                 options={{
                     tabBarLabel: 'Beranda',
-                    tabBarIcon: ({ color, size, focused }) => (
+                    tabBarIcon: ({ color, focused }) => (
                         <View className={`items-center justify-center p-1 rounded-xl ${focused ? 'bg-gray-100' : ''}`}>
-                            <Ionicons name="home" color={color} size={size + 2} />
+                            <Ionicons name="home" color={color} size={22} />
                         </View>
                     ),
                 }}
@@ -69,9 +75,9 @@ const MainTabs = () => {
                 component={PocketsScreen}
                 options={{
                     tabBarLabel: 'Dompet',
-                    tabBarIcon: ({ color, size, focused }) => (
+                    tabBarIcon: ({ color, focused }) => (
                         <View className={`items-center justify-center p-1 rounded-xl ${focused ? 'bg-gray-100' : ''}`}>
-                            <Ionicons name="card" color={color} size={size + 2} />
+                            <Ionicons name="card" color={color} size={22} />
                         </View>
                     ),
                 }}
@@ -81,9 +87,9 @@ const MainTabs = () => {
                 component={SearchScreen}
                 options={{
                     tabBarLabel: 'Cari',
-                    tabBarIcon: ({ color, size, focused }) => (
+                    tabBarIcon: ({ color, focused }) => (
                         <View className={`items-center justify-center p-1 rounded-xl ${focused ? 'bg-gray-100' : ''}`}>
-                            <Ionicons name="search" color={color} size={size + 2} />
+                            <Ionicons name="search" color={color} size={22} />
                         </View>
                     ),
                 }}
@@ -93,9 +99,9 @@ const MainTabs = () => {
                 component={MonthlyScreen}
                 options={{
                     tabBarLabel: 'Laporan',
-                    tabBarIcon: ({ color, size, focused }) => (
+                    tabBarIcon: ({ color, focused }) => (
                         <View className={`items-center justify-center p-1 rounded-xl ${focused ? 'bg-gray-100' : ''}`}>
-                            <Ionicons name="calendar" color={color} size={size + 2} />
+                            <Ionicons name="calendar" color={color} size={22} />
                         </View>
                     ),
                 }}

@@ -131,12 +131,12 @@ const HomeScreen = ({ navigation }) => {
     }, [filteredExpenses]);
 
     const renderHeader = () => (
-        <View className="mb-6 px-4 pt-2">
-            {/* Global Balance - Top Left */}
-            <View className="mb-6 mt-2">
-                <Text className="text-gray-500 text-sm font-medium mb-1">Sisa Bulan Ini</Text>
+        <View className="mb-4 px-4 pt-4">
+            {/* Minimalist Header */}
+            <View className="items-center mb-4">
+                <Text className="text-gray-400 text-xs font-bold tracking-[0.2em] uppercase mb-2">Total Saldo</Text>
                 <Text
-                    className={`text-3xl font-bold tracking-tight ${totalIncome - totalExpense >= 0 ? 'text-gray-800' : 'text-red-600'}`}
+                    className="text-4xl font-extrabold text-primary tracking-tighter"
                     adjustsFontSizeToFit
                     numberOfLines={1}
                 >
@@ -144,38 +144,45 @@ const HomeScreen = ({ navigation }) => {
                 </Text>
             </View>
 
-            {/* Monthly Stats Card */}
-            <View className="p-5 bg-primary rounded-2xl shadow-lg shadow-green-900/20 android:elevation-10">
-                <View className="flex-row justify-between items-center mb-4">
-                    <Text className="text-green-50 text-base font-medium">Arus Kas Bulan Ini</Text>
-                    <View className="bg-white/20 px-2 py-1 rounded-lg">
+            {/* Main Stats Card (Deep Navy) */}
+            <View className="p-6 bg-primary rounded-[32px] shadow-2xl shadow-indigo-900/30 android:elevation-10">
+                <View className="flex-row justify-between items-center mb-6">
+                    <View>
+                        <Text className="text-white/60 text-xs font-medium tracking-wider uppercase mb-1">Ringkasan</Text>
+                        <Text className="text-white text-lg font-bold">
+                            {formatMonth(selectedDate.toISOString())}
+                        </Text>
+                    </View>
+                    <View className="bg-white/10 px-3 py-1.5 rounded-full border border-white/10">
                         <Text className="text-white text-xs font-bold">
-                            {filteredExpenses.length} Trx
+                            {filteredExpenses.length} Transaksi
                         </Text>
                     </View>
                 </View>
 
                 <View className="flex-row gap-4">
-                    <View className="flex-1 bg-white/10 p-3 rounded-xl">
-                        <View className="flex-row items-center mb-1">
-                            <View className="w-6 h-6 rounded-full bg-green-400/20 items-center justify-center mr-2">
-                                <Ionicons name="arrow-up" size={14} color="#86EFAC" />
+                    {/* Income */}
+                    <View className="flex-1 bg-white/5 p-4 rounded-2xl border border-white/5">
+                        <View className="flex-row items-center mb-2">
+                            <View className="w-8 h-8 rounded-full bg-emerald-500/20 items-center justify-center mr-3">
+                                <Ionicons name="arrow-up" size={16} color="#34D399" />
                             </View>
-                            <Text className="text-green-100 text-xs font-medium">Pemasukan</Text>
+                            <Text className="text-emerald-100/60 text-xs font-medium uppercase tracking-wide">Masuk</Text>
                         </View>
-                        <Text className="text-white font-bold text-base" numberOfLines={1} adjustsFontSizeToFit>
+                        <Text className="text-white font-bold text-lg tracking-tight" numberOfLines={1} adjustsFontSizeToFit>
                             {formatCurrency(totalIncome)}
                         </Text>
                     </View>
 
-                    <View className="flex-1 bg-white/10 p-3 rounded-xl">
-                        <View className="flex-row items-center mb-1">
-                            <View className="w-6 h-6 rounded-full bg-red-400/20 items-center justify-center mr-2">
-                                <Ionicons name="arrow-down" size={14} color="#FDA4AF" />
+                    {/* Expense */}
+                    <View className="flex-1 bg-white/5 p-4 rounded-2xl border border-white/5">
+                        <View className="flex-row items-center mb-2">
+                            <View className="w-8 h-8 rounded-full bg-rose-500/20 items-center justify-center mr-3">
+                                <Ionicons name="arrow-down" size={16} color="#FB7185" />
                             </View>
-                            <Text className="text-red-100 text-xs font-medium">Pengeluaran</Text>
+                            <Text className="text-rose-100/60 text-xs font-medium uppercase tracking-wide">Keluar</Text>
                         </View>
-                        <Text className="text-white font-bold text-base" numberOfLines={1} adjustsFontSizeToFit>
+                        <Text className="text-white font-bold text-lg tracking-tight" numberOfLines={1} adjustsFontSizeToFit>
                             {formatCurrency(totalExpense)}
                         </Text>
                     </View>
@@ -191,19 +198,23 @@ const HomeScreen = ({ navigation }) => {
                 const newDate = setYear(selectedDate, item);
                 setSelectedDate(newDate);
             }}
-            className={`px-4 py-2 rounded-full mr-2 h-[40px] justify-center ${getYear(selectedDate) === item ? 'bg-primary' : 'bg-gray-100'}`}
-            style={{ width: ITEM_WIDTH }}
+            className={`px-5 py-2 rounded-full mr-2 h-[40px] items-center justify-center border ${getYear(selectedDate) === item
+                ? 'bg-primary border-primary shadow-lg shadow-indigo-500/30'
+                : 'bg-white border-gray-100'
+                }`}
+            style={{ minWidth: ITEM_WIDTH }}
         >
-            <Text className={`font-bold text-center ${getYear(selectedDate) === item ? 'text-white' : 'text-gray-600'}`}>
+            <Text className={`font-bold text-sm ${getYear(selectedDate) === item ? 'text-white' : 'text-gray-400'
+                }`}>
                 {item}
             </Text>
         </TouchableOpacity>
     );
 
     return (
-        <SafeAreaView className="flex-1 bg-gray-50" edges={['top', 'left', 'right']}>
+        <SafeAreaView className="flex-1 bg-background" edges={['top', 'left', 'right']}>
             {/* Status Bar Handling for Android */}
-            <StatusBar barStyle="dark-content" backgroundColor="#f9fafb" />
+            <StatusBar barStyle="dark-content" backgroundColor="#F7F8FA" />
 
             <View className="flex-1">
                 {renderHeader()}
@@ -224,7 +235,7 @@ const HomeScreen = ({ navigation }) => {
                     </View>
 
                     <View className="flex-row justify-between items-center mb-2">
-                        <Text className="text-xl font-bold text-gray-800">Riwayat Transaksi</Text>
+                        <Text className="text-lg font-bold text-primary tracking-tight">Riwayat Transaksi</Text>
                     </View>
 
                     <SectionList
@@ -233,7 +244,7 @@ const HomeScreen = ({ navigation }) => {
                         keyExtractor={(item) => item.id}
                         renderItem={({ item }) => <ExpenseItem item={item} />}
                         renderSectionHeader={({ section: { title } }) => (
-                            <Text className="text-gray-500 font-bold text-sm mt-4 mb-2 bg-gray-50 pb-1">{title}</Text>
+                            <Text className="text-gray-400 font-bold text-xs uppercase tracking-widest mt-6 mb-3 pl-1">{title}</Text>
                         )}
                         showsVerticalScrollIndicator={false}
                         stickySectionHeadersEnabled={false}

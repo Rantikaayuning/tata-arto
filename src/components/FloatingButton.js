@@ -5,7 +5,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 const FloatingButton = ({ onPress }) => {
     return (
         <TouchableOpacity
-            className="absolute bottom-4 right-6 bg-primary w-14 h-14 rounded-full items-center justify-center shadow-lg elevation-5"
+            className="absolute bottom-4 right-6 bg-accent w-14 h-14 rounded-full items-center justify-center shadow-lg shadow-accent/40 elevation-5"
             onPress={onPress}
             activeOpacity={0.8}
         >

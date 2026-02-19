@@ -124,29 +124,35 @@ const PocketsScreen = () => {
             return (
                 <TouchableOpacity
                     onPress={() => setModalVisible(true)}
-                    className="flex-1 bg-gray-50 p-4 m-2 rounded-xl border-2 border-dashed border-gray-300 min-h-[140px] justify-center items-center max-w-[47%]"
+                    className="flex-1 bg-white/40 p-5 m-2 rounded-[24px] border-2 border-dashed border-gray-200 min-h-[160px] justify-center items-center max-w-[47%]"
                 >
-                    <Ionicons name="add" size={32} color="#9CA3AF" />
-                    <Text className="text-gray-500 font-medium text-sm mt-2 text-center">Buat Dompet</Text>
+                    <View className="w-12 h-12 rounded-full bg-gray-50 items-center justify-center mb-3">
+                        <Ionicons name="add" size={24} color="#9CA3AF" />
+                    </View>
+                    <Text className="text-gray-400 font-bold text-xs uppercase tracking-wider text-center">Tambah Dompet</Text>
                 </TouchableOpacity>
             );
         }
 
         return (
             <TouchableOpacity
-                className="flex-1 bg-white p-4 m-2 rounded-xl shadow-sm border border-gray-100 min-h-[140px] justify-between max-w-[47%]"
+                className="flex-1 bg-white p-5 m-2 rounded-[24px] shadow-sm shadow-indigo-100/50 min-h-[160px] justify-between max-w-[47%]"
                 onPress={() => navigation.navigate('PocketDetail', { wallet: item })}
             >
                 <View className="flex-row justify-between items-start">
-                    <View className={`p-3 rounded-full ${item.name === 'Dompet Utama' ? 'bg-primary/20' : 'bg-gray-100'}`}>
-                        <Ionicons name={item.icon} size={24} color={item.name === 'Dompet Utama' ? '#528567' : '#4B5563'} />
+                    <View className={`w-12 h-12 rounded-full items-center justify-center ${item.name === 'Dompet Utama' ? 'bg-primary/10' : 'bg-gray-50'}`}>
+                        <Ionicons name={item.icon} size={24} color={item.name === 'Dompet Utama' ? '#343B71' : '#64748B'} />
                     </View>
-                    {item.balance < 0 && <Ionicons name="alert-circle" size={20} color="#DC2626" />}
+                    {item.balance < 0 && <Ionicons name="alert-circle" size={20} color="#FB7185" />}
                 </View>
 
                 <View>
-                    <Text className="text-gray-500 font-medium text-sm mb-1">{item.name}</Text>
-                    <Text className={`text-lg font-bold ${item.balance < 0 ? 'text-red-500' : 'text-gray-800'}`}>
+                    <Text className="text-gray-400 font-bold text-xs uppercase tracking-wider mb-2" numberOfLines={1}>{item.name}</Text>
+                    <Text
+                        className={`text-xl font-extrabold tracking-tight ${item.balance < 0 ? 'text-rose-500' : 'text-gray-900'}`}
+                        adjustsFontSizeToFit
+                        numberOfLines={1}
+                    >
                         {formatCurrency(item.balance)}
                     </Text>
                 </View>
@@ -155,12 +161,20 @@ const PocketsScreen = () => {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-gray-50">
-            <View className="bg-primary p-6 pb-8 shadow-sm">
-                <Text className="text-2xl font-bold text-white mb-6">Dompet</Text>
-                <View>
-                    <Text className="text-green-50 text-sm font-medium mb-1">Total Aset</Text>
-                    <Text className="text-white text-3xl font-bold tracking-tight">{formatCurrency(totalAssets)}</Text>
+        <SafeAreaView className="flex-1 bg-background" edges={['top', 'left', 'right']}>
+            <View className="px-6 pt-4 pb-2">
+                <Text className="text-3xl font-extrabold text-primary tracking-tighter mb-6">Dompet Saya</Text>
+
+                {/* Total Asset Card */}
+                <View className="bg-primary p-6 rounded-[32px] shadow-2xl shadow-indigo-900/30 android:elevation-10 overflow-hidden relative">
+                    {/* Decorative Circle */}
+                    <View className="absolute -right-12 -top-12 w-48 h-48 bg-white/5 rounded-full" />
+                    <View className="absolute -left-6 -bottom-6 w-32 h-32 bg-white/5 rounded-full" />
+
+                    <Text className="text-white/60 text-xs font-bold tracking-[0.2em] uppercase mb-2">Total Aset</Text>
+                    <Text className="text-4xl font-black text-white tracking-tighter shadow-sm">
+                        {formatCurrency(totalAssets)}
+                    </Text>
                 </View>
             </View>
 
@@ -169,7 +183,7 @@ const PocketsScreen = () => {
                 renderItem={renderCard}
                 keyExtractor={item => item.id}
                 numColumns={2}
-                contentContainerStyle={{ padding: 16 }}
+                contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
                 columnWrapperStyle={{ justifyContent: 'space-between' }}
                 showsVerticalScrollIndicator={false}
             />
@@ -181,52 +195,54 @@ const PocketsScreen = () => {
                 visible={modalVisible}
                 onRequestClose={() => setModalVisible(false)}
             >
-                <View className="flex-1 justify-end bg-black/50">
-                    <View className="bg-white rounded-t-3xl p-6 max-h-[90%]">
-                        <View className="flex-row justify-between items-center mb-6">
-                            <Text className="text-xl font-bold text-gray-800">Buat Dompet Baru</Text>
-                            <TouchableOpacity onPress={() => setModalVisible(false)}>
+                <View className="flex-1 justify-end bg-black/60">
+                    <View className="bg-white rounded-t-[32px] p-8 max-h-[90%]">
+                        <View className="flex-row justify-between items-center mb-8">
+                            <Text className="text-2xl font-bold text-primary tracking-tight">Dompet Baru</Text>
+                            <TouchableOpacity onPress={() => setModalVisible(false)} className="p-2 bg-gray-50 rounded-full">
                                 <Ionicons name="close" size={24} color="#374151" />
                             </TouchableOpacity>
                         </View>
 
                         <ScrollView showsVerticalScrollIndicator={false}>
-                            <Text className="text-gray-600 font-medium mb-2">Nama Dompet</Text>
+                            <Text className="text-gray-500 font-bold text-xs uppercase tracking-wider mb-3">Nama Dompet</Text>
                             <TextInput
-                                className="bg-gray-50 p-4 rounded-xl border border-gray-200 mb-6 focus:border-primary"
-                                placeholder="Contoh: Dompet Tunai, Bank BCA"
+                                className="bg-gray-50 p-5 rounded-2xl border-0 mb-6 text-gray-900 font-bold text-lg"
+                                placeholder="Contoh: Tabungan"
+                                placeholderTextColor="#9CA3AF"
                                 value={newWalletName}
                                 onChangeText={setNewWalletName}
                             />
 
-                            <Text className="text-gray-600 font-medium mb-2">Saldo Awal (Opsional)</Text>
+                            <Text className="text-gray-500 font-bold text-xs uppercase tracking-wider mb-3">Saldo Awal</Text>
                             <TextInput
-                                className="bg-gray-50 p-4 rounded-xl border border-gray-200 mb-6 focus:border-primary"
+                                className="bg-gray-50 p-5 rounded-2xl border-0 mb-6 text-gray-900 font-bold text-lg"
                                 placeholder="Rp 0"
+                                placeholderTextColor="#9CA3AF"
                                 keyboardType="numeric"
                                 value={initialAmount}
                                 onChangeText={handleAmountChange}
                             />
 
-                            <Text className="text-gray-600 font-medium mb-2">Pilih Ikon</Text>
-                            <View className="flex-row flex-wrap mb-8">
+                            <Text className="text-gray-500 font-bold text-xs uppercase tracking-wider mb-3">Pilih Ikon</Text>
+                            <View className="flex-row flex-wrap mb-8 gap-3">
                                 {availableIcons.map((icon) => (
                                     <TouchableOpacity
                                         key={icon}
                                         onPress={() => setNewWalletIcon(icon)}
-                                        className={`w-12 h-12 rounded-full items-center justify-center m-2 ${newWalletIcon === icon ? 'bg-primary border-primary border' : 'bg-gray-100'}`}
+                                        className={`w-14 h-14 rounded-2xl items-center justify-center ${newWalletIcon === icon ? 'bg-primary shadow-lg shadow-indigo-500/30' : 'bg-gray-50'}`}
                                     >
-                                        <Ionicons name={icon} size={24} color={newWalletIcon === icon ? 'white' : '#4B5563'} />
+                                        <Ionicons name={icon} size={24} color={newWalletIcon === icon ? 'white' : '#64748B'} />
                                     </TouchableOpacity>
                                 ))}
                             </View>
 
                         </ScrollView>
                         <TouchableOpacity
-                            className="bg-primary py-4 rounded-xl items-center mt-4"
+                            className="bg-primary py-5 rounded-[20px] items-center mt-4 shadow-xl shadow-indigo-900/20"
                             onPress={handleAddWallet}
                         >
-                            <Text className="text-white font-bold text-lg">Simpan Dompet</Text>
+                            <Text className="text-white font-bold text-lg tracking-wide">Simpan Dompet</Text>
                         </TouchableOpacity>
                     </View>
                 </View>

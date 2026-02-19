@@ -63,29 +63,30 @@ const SearchScreen = ({ navigation }) => {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-gray-50">
-            {/* Header / Search Bar */}
-            <View className="bg-white p-4 pb-2 border-b border-gray-100">
-                <Text className="text-2xl font-bold text-gray-800 mb-4">Pencarian</Text>
+        <SafeAreaView className="flex-1 bg-background" edges={['top', 'left', 'right']}>
+            <View className="px-6 pt-4 pb-2">
+                <Text className="text-3xl font-extrabold text-primary tracking-tighter mb-6">Pencarian</Text>
 
-                <View className="flex-row items-center bg-gray-100 rounded-xl px-4 py-3 mb-4">
-                    <Ionicons name="search" size={20} color="#9CA3AF" />
+                {/* Search Bar */}
+                <View className="flex-row items-center bg-white shadow-lg shadow-indigo-100/50 rounded-[20px] px-5 py-4 mb-6">
+                    <Ionicons name="search" size={24} color="#343B71" />
                     <TextInput
-                        className="flex-1 ml-3 text-base text-gray-800"
+                        className="flex-1 ml-4 text-lg font-bold text-gray-800"
                         placeholder="Cari catatan..."
+                        placeholderTextColor="#9CA3AF"
                         value={searchQuery}
                         onChangeText={setSearchQuery}
                         autoFocus={false}
                     />
                     {searchQuery.length > 0 && (
                         <TouchableOpacity onPress={() => setSearchQuery('')}>
-                            <Ionicons name="close-circle" size={20} color="#9CA3AF" />
+                            <Ionicons name="close-circle" size={24} color="#9CA3AF" />
                         </TouchableOpacity>
                     )}
                 </View>
 
                 {/* Filter Chips */}
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} className="pb-2">
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-2" contentContainerStyle={{ paddingBottom: 10 }}>
                     {/* Date Filter Chip */}
                     <TouchableOpacity
                         onPress={() => {
@@ -96,40 +97,46 @@ const SearchScreen = ({ navigation }) => {
                                 setDateFilterType('all');
                             }
                         }}
-                        className={`flex-row items-center px-4 py-2 rounded-full mr-2 border ${dateFilterType === 'specific' ? 'bg-primary border-primary' : 'bg-white border-gray-300'}`}
+                        className={`flex-row items-center px-5 py-2.5 rounded-full mr-3 border-0 ${dateFilterType === 'specific'
+                                ? 'bg-primary shadow-lg shadow-indigo-500/30'
+                                : 'bg-white shadow-sm shadow-indigo-100/30'
+                            }`}
                     >
-                        <Ionicons name="calendar-outline" size={16} color={dateFilterType === 'specific' ? 'white' : '#4B5563'} />
-                        <Text className={`ml-2 font-medium ${dateFilterType === 'specific' ? 'text-white' : 'text-gray-700'}`}>
-                            {dateFilterType === 'specific' ? format(specificDate, 'dd MMM yyyy', { locale: id }) : 'Semua Tanggal'}
+                        <Ionicons name="calendar-outline" size={18} color={dateFilterType === 'specific' ? 'white' : '#64748B'} />
+                        <Text className={`ml-2 font-bold text-xs uppercase tracking-wider ${dateFilterType === 'specific' ? 'text-white' : 'text-gray-500'}`}>
+                            {dateFilterType === 'specific' ? format(specificDate, 'dd MMM', { locale: id }) : 'Tanggal'}
                         </Text>
                         {dateFilterType === 'specific' && (
-                            <TouchableOpacity onPress={() => setDateFilterType('all')} className="ml-2 bg-white/20 rounded-full p-0.5">
-                                <Ionicons name="close" size={12} color="white" />
-                            </TouchableOpacity>
+                            <View className="ml-2 bg-white/20 rounded-full p-0.5">
+                                <Ionicons name="close" size={10} color="white" />
+                            </View>
                         )}
                     </TouchableOpacity>
 
                     {/* Category Filter Chip */}
                     <TouchableOpacity
                         onPress={() => setShowCategoryModal(true)}
-                        className={`flex-row items-center px-4 py-2 rounded-full mr-2 border ${selectedCategory ? 'bg-primary border-primary' : 'bg-white border-gray-300'}`}
+                        className={`flex-row items-center px-5 py-2.5 rounded-full mr-3 border-0 ${selectedCategory
+                                ? 'bg-primary shadow-lg shadow-indigo-500/30'
+                                : 'bg-white shadow-sm shadow-indigo-100/30'
+                            }`}
                     >
-                        <Ionicons name="pricetag-outline" size={16} color={selectedCategory ? 'white' : '#4B5563'} />
-                        <Text className={`ml-2 font-medium ${selectedCategory ? 'text-white' : 'text-gray-700'}`}>
-                            {selectedCategory ? selectedCategory.name : 'Semua Kategori'}
+                        <Ionicons name="pricetag-outline" size={18} color={selectedCategory ? 'white' : '#64748B'} />
+                        <Text className={`ml-2 font-bold text-xs uppercase tracking-wider ${selectedCategory ? 'text-white' : 'text-gray-500'}`}>
+                            {selectedCategory ? selectedCategory.name : 'Kategori'}
                         </Text>
                         {selectedCategory && (
-                            <TouchableOpacity onPress={() => setSelectedCategory(null)} className="ml-2 bg-white/20 rounded-full p-0.5">
-                                <Ionicons name="close" size={12} color="white" />
-                            </TouchableOpacity>
+                            <View className="ml-2 bg-white/20 rounded-full p-0.5">
+                                <Ionicons name="close" size={10} color="white" />
+                            </View>
                         )}
                     </TouchableOpacity>
                 </ScrollView>
             </View>
 
             {/* Content */}
-            <View className="flex-1 px-4 pt-4">
-                <Text className="text-gray-500 mb-4 font-medium">
+            <View className="flex-1 px-6">
+                <Text className="text-gray-400 font-bold text-xs uppercase tracking-widest mb-4 ml-1">
                     {filteredExpenses.length} transaksi ditemukan
                 </Text>
 
@@ -140,9 +147,11 @@ const SearchScreen = ({ navigation }) => {
                     contentContainerStyle={{ paddingBottom: 100 }}
                     showsVerticalScrollIndicator={false}
                     ListEmptyComponent={
-                        <View className="items-center justify-center mt-20">
-                            <Ionicons name="search-outline" size={60} color="#D1D5DB" />
-                            <Text className="text-gray-400 text-lg mt-4 text-center">Tidak ada transaksi yang sesuai</Text>
+                        <View className="items-center justify-center mt-20 opacity-50">
+                            <View className="w-20 h-20 bg-gray-100 rounded-full items-center justify-center mb-4">
+                                <Ionicons name="search" size={40} color="#CBD5E1" />
+                            </View>
+                            <Text className="text-gray-400 text-sm font-bold uppercase tracking-wider text-center">Tidak ada hasil</Text>
                         </View>
                     }
                 />
