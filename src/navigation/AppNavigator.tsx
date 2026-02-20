@@ -98,8 +98,6 @@ const MainTabs = () => {
 };
 
 const AppNavigator = () => {
-    const user = useExpenseStore((state) => state.user);
-
     return (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
             <Stack.Screen name="MainTabs" component={MainTabs} />

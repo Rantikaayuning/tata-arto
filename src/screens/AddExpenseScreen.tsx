@@ -56,8 +56,24 @@ const AddExpenseScreen = ({ navigation, route }: any) => {
             Alert.alert('Error', 'Mohon pilih dompet');
             return;
         }
-        if (!selectedCategory) {
-            Alert.alert('Error', 'Mohon pilih kategori');
+
+        let finalCategory = selectedCategory;
+
+        if (type === 'income') {
+            const incomeCat = categories.find(c => c.type === 'income');
+            if (incomeCat) {
+                finalCategory = incomeCat;
+            } else {
+                finalCategory = await addCategory({
+                    name: 'Pendapatan',
+                    icon: 'cash',
+                    type: 'income'
+                }) || null;
+            }
+        }
+
+        if (!finalCategory) {
+            Alert.alert('Error', 'Gagal membuat atau memilih kategori. Silahkan coba lagi.');
             return;
         }
 
@@ -65,7 +81,7 @@ const AddExpenseScreen = ({ navigation, route }: any) => {
         await addExpense({
             amount: numericAmount,
             wallet: selectedWallet,
-            category: selectedCategory,
+            category: finalCategory,
             note,
             date: date.toISOString(),
             type: type
@@ -136,7 +152,7 @@ const AddExpenseScreen = ({ navigation, route }: any) => {
         </TouchableOpacity>
     );
 
-    const isFormValid = amount && selectedWallet && selectedCategory;
+    const isFormValid = type === 'income' ? !!(amount && selectedWallet) : !!(amount && selectedWallet && selectedCategory);
 
     return (
         <View className="flex-1 bg-black/50 justify-center items-center p-4">
@@ -167,7 +183,7 @@ const AddExpenseScreen = ({ navigation, route }: any) => {
                             <View className="flex-1 mr-3">
                                 <Text className="text-gray-400 text-xs font-bold mb-1.5 uppercase tracking-wider">Nominal</Text>
                                 <TextInput
-                                    className="w-full bg-gray-50 p-3 h-14 rounded-2xl text-xl font-bold border border-gray-200 focus:border-primary text-primary"
+                                    className="w-full bg-gray-50 p-4 min-h-[64px] rounded-2xl text-2xl font-bold border border-gray-200 focus:border-primary text-primary"
                                     placeholder="0"
                                     keyboardType="numeric"
                                     value={amount}
@@ -180,12 +196,12 @@ const AddExpenseScreen = ({ navigation, route }: any) => {
                             <View>
                                 <Text className="text-gray-400 text-xs font-bold mb-1.5 uppercase tracking-wider">Tanggal</Text>
                                 <TouchableOpacity
-                                    className="bg-gray-50 p-3 rounded-2xl border border-gray-200 items-center justify-center h-14 w-14"
+                                    className="bg-gray-50 p-3 rounded-2xl border border-gray-200 items-center justify-center min-h-[64px] min-w-[64px]"
                                     onPress={() => setShowDatePicker(true)}
                                 >
                                     <View className="items-center">
-                                        <Text className="text-xs font-bold text-gray-800">{date.getDate()}</Text>
-                                        <Text className="text-[10px] text-gray-500">{date.toLocaleString('default', { month: 'short' })}</Text>
+                                        <Text className="text-sm font-bold text-gray-800">{date.getDate()}</Text>
+                                        <Text className="text-[11px] text-gray-500">{date.toLocaleString('default', { month: 'short' })}</Text>
                                     </View>
                                 </TouchableOpacity>
                             </View>
@@ -262,27 +278,29 @@ const AddExpenseScreen = ({ navigation, route }: any) => {
                             </ScrollView>
                         </View>
 
-                        {/* 3. Categories (Horizontal Scroll) */}
-                        <View className="mb-6">
-                            <Text className="text-gray-400 text-xs font-bold mb-2 uppercase tracking-wider">Kategori</Text>
-                            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
-                                {(type === 'expense' ? expenseCategories : incomeCategories).map(cat =>
-                                    renderPill(
-                                        cat,
-                                        selectedCategory?.id === cat.id,
-                                        () => setSelectedCategory(cat),
-                                        'bg-indigo-50 border-primary'
-                                    )
-                                )}
-                                <TouchableOpacity
-                                    onPress={() => setModalVisible(true)}
-                                    className="mr-3 px-4 py-2 rounded-2xl flex-row items-center border border-dashed border-gray-300 bg-gray-50"
-                                >
-                                    <Ionicons name="add" size={18} color="#6B7280" />
-                                    <Text className="ml-2 font-medium text-gray-500">Baru</Text>
-                                </TouchableOpacity>
-                            </ScrollView>
-                        </View>
+                        {/* 3. Categories (Horizontal Scroll) - ONLY FOR EXPENSE */}
+                        {type === 'expense' && (
+                            <View className="mb-6">
+                                <Text className="text-gray-400 text-xs font-bold mb-2 uppercase tracking-wider">Kategori</Text>
+                                <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
+                                    {(type === 'expense' ? expenseCategories : incomeCategories).map(cat =>
+                                        renderPill(
+                                            cat,
+                                            selectedCategory?.id === cat.id,
+                                            () => setSelectedCategory(cat),
+                                            'bg-indigo-50 border-primary'
+                                        )
+                                    )}
+                                    <TouchableOpacity
+                                        onPress={() => setModalVisible(true)}
+                                        className="mr-3 px-4 py-2 rounded-2xl flex-row items-center border border-dashed border-gray-300 bg-gray-50"
+                                    >
+                                        <Ionicons name="add" size={18} color="#6B7280" />
+                                        <Text className="ml-2 font-medium text-gray-500">Baru</Text>
+                                    </TouchableOpacity>
+                                </ScrollView>
+                            </View>
+                        )}
 
                         {/* 4. Note Input */}
                         <View className="mb-8">
