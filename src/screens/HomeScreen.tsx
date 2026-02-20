@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react';
-import { View, Text, FlatList, SectionList, TouchableOpacity, Pressable, Modal, StatusBar, FlatListProps } from 'react-native';
+import { View, Text, FlatList, SectionList, TouchableOpacity, Pressable, Modal, StatusBar, FlatListProps, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import useExpenseStore from '../context/useExpenseStore';
 import ExpenseItem from '../components/ExpenseItem';
@@ -9,6 +9,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { isSameMonth, getYear, setYear, setMonth, format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { Expense } from '../types';
+import { Logo } from '../components/Logo';
 
 const ITEM_WIDTH = 80;
 
@@ -20,6 +21,7 @@ interface Section {
 const HomeScreen = ({ navigation }: any) => {
     const expenses = useExpenseStore((state) => state.expenses) || [];
     const user = useExpenseStore((state) => state.user);
+    const logout = useExpenseStore((state) => state.logout);
     const [isFabOpen, setIsFabOpen] = useState(false);
 
     // Month Selection State
@@ -161,8 +163,8 @@ const HomeScreen = ({ navigation }: any) => {
             {/* Top Bar */}
             <View className="flex-row justify-between items-center mb-6">
                 <View className="flex-row items-center">
-                    <View className="w-8 h-8 bg-primary rounded-xl items-center justify-center mr-2 shadow-sm shadow-indigo-200">
-                        <Ionicons name="wallet" size={16} color="white" />
+                    <View className="w-10 h-10 bg-white rounded-xl items-center justify-center mr-3 shadow-sm border border-gray-100">
+                        <Logo width={24} height={24} />
                     </View>
                     <Text className="text-xl font-black text-primary tracking-tighter">tata arto.</Text>
                 </View>

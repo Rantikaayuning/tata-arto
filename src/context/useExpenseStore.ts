@@ -1,144 +1,195 @@
 import { create } from 'zustand';
-import { createJSONStorage, persist } from 'zustand/middleware';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { supabase } from '../lib/supabase';
 import { Expense, Wallet, Category, User } from '../types';
 
-
-
-interface ExpenseState {
+export interface ExpenseState {
     expenses: Expense[];
     wallets: Wallet[];
     categories: Category[];
     isBalanceHidden: boolean;
-
-    // Auth & Members
     user: User | null;
     members: User[];
+    isLoading: boolean;
 
     toggleBalanceVisibility: () => void;
-    addExpense: (expense: Omit<Expense, 'id'>) => void;
-    deleteExpense: (id: string) => void;
-    updateExpense: (id: string, updatedExpense: Partial<Expense>) => void;
-    addWallet: (newWallet: Wallet) => void;
-    addCategory: (newCategory: Category) => void;
-    getMonthlyExpenses: (month: number, year: number) => Expense[];
-    resetAll: () => void;
-
-    // Auth Actions
+    fetchData: () => Promise<void>;
+    addExpense: (expense: Omit<Expense, 'id'>) => Promise<void>;
+    deleteExpense: (id: string) => Promise<void>;
+    updateExpense: (id: string, updatedExpense: Partial<Expense>) => Promise<void>;
+    addWallet: (newWallet: Omit<Wallet, 'id'>) => Promise<void>;
+    addCategory: (newCategory: Omit<Category, 'id'>) => Promise<void>;
     login: (user: User) => void;
-    logout: () => void;
-    addMember: (member: User) => void;
+    logout: () => Promise<void>;
+    addMember: (member: User) => Promise<void>;
 }
 
-const useExpenseStore = create<ExpenseState>()(
-    persist(
-        (set, get) => ({
-            user: null, // Initial Auth State
-            members: [
-                { id: 'user-1', name: 'Rantika', email: 'rantika@tataarto.com', role: 'admin', avatar: 'person' }
-            ],
+const useExpenseStore = create<ExpenseState>((set, get) => ({
+    user: null,
+    expenses: [],
+    wallets: [{ id: 'default-cash', name: 'Cash', icon: 'wallet-outline', type: 'wallet' }],
+    categories: [],
+    members: [],
+    isBalanceHidden: false,
+    isLoading: false,
+
+    toggleBalanceVisibility: () => {
+        set((state) => ({
+            isBalanceHidden: !state.isBalanceHidden,
+        }));
+    },
+
+    login: (user) => {
+        set({ user });
+        get().fetchData();
+    },
+
+    logout: async () => {
+        await supabase.auth.signOut();
+        set({
+            user: null,
             expenses: [],
-            wallets: [
-                { id: '1', name: 'Dompet Utama', icon: 'wallet', type: 'wallet' },
-                { id: '2', name: 'Cash', icon: 'cash', type: 'wallet' }
-            ],
-            categories: [
-                // Expense Categories
-                { id: 'c1', name: 'Makan & Minum', icon: 'fast-food', type: 'expense' },
-                { id: 'c2', name: 'Transportasi', icon: 'bus', type: 'expense' },
-                { id: 'c3', name: 'Belanja', icon: 'cart', type: 'expense' },
-                { id: 'c4', name: 'Tagihan', icon: 'receipt', type: 'expense' },
-                { id: 'c5', name: 'Hiburan', icon: 'game-controller', type: 'expense' },
-                { id: 'c6', name: 'Kesehatan', icon: 'medkit', type: 'expense' },
-                { id: 'c7', name: 'Pendidikan', icon: 'school', type: 'expense' },
+            wallets: [{ id: 'default-cash', name: 'Cash', icon: 'wallet-outline', type: 'wallet' }],
+            categories: []
+        });
+    },
 
-                // Income Categories
-                { id: 'inc1', name: 'Gaji', icon: 'business', type: 'income' },
-                { id: 'inc2', name: 'Bonus', icon: 'gift', type: 'income' },
-                { id: 'inc3', name: 'Investasi', icon: 'trending-up', type: 'income' },
-            ],
-
-            isBalanceHidden: false,
-
-            toggleBalanceVisibility: () => {
-                set((state) => ({
-                    isBalanceHidden: !state.isBalanceHidden,
-                }));
-            },
-
-            addWallet: (newWallet) => {
-                set((state) => ({
-                    wallets: [...state.wallets, newWallet],
-                }));
-            },
-
-            addCategory: (newCategory) => {
-                set((state) => ({
-                    categories: [...state.categories, newCategory],
-                }));
-            },
-
-            addExpense: (expense) => {
-                set((state) => ({
-                    expenses: [
-                        { ...expense, id: Date.now().toString() },
-                        ...state.expenses,
-                    ],
-                }));
-            },
-
-            deleteExpense: (id) => {
-                set((state) => ({
-                    expenses: state.expenses.filter((e) => e.id !== id),
-                }));
-            },
-
-            updateExpense: (id, updatedExpense) => {
-                set((state) => ({
-                    expenses: state.expenses.map((e) =>
-                        e.id === id ? { ...e, ...updatedExpense } : e
-                    ),
-                }));
-            },
-
-            getMonthlyExpenses: (month, year) => {
-                return get().expenses.filter((e) => {
-                    const date = new Date(e.date);
-                    return date.getMonth() === month && date.getFullYear() === year;
-                });
-            },
-
-            resetAll: () => {
-                set({
-                    expenses: [],
-                    wallets: [
-                        { id: '1', name: 'Dompet Utama', icon: 'wallet', type: 'wallet' },
-                        { id: '2', name: 'Cash', icon: 'cash', type: 'wallet' }
-                    ],
-                    categories: [
-                        { id: 'c1', name: 'Makan & Minum', icon: 'fast-food', type: 'expense' },
-                        { id: 'c2', name: 'Transportasi', icon: 'bus', type: 'expense' },
-                        { id: 'c3', name: 'Belanja', icon: 'cart', type: 'expense' },
-                        { id: 'c4', name: 'Tagihan', icon: 'receipt', type: 'expense' },
-                        { id: 'c5', name: 'Hiburan', icon: 'game-controller', type: 'expense' },
-                        { id: 'c6', name: 'Kesehatan', icon: 'medkit', type: 'expense' },
-                        { id: 'c7', name: 'Pendidikan', icon: 'school', type: 'expense' },
-                        { id: 'inc1', name: 'Gaji', icon: 'business', type: 'income' },
-                        { id: 'inc2', name: 'Bonus', icon: 'gift', type: 'income' },
-                        { id: 'inc3', name: 'Investasi', icon: 'trending-up', type: 'income' },
-                    ]
-                });
-            },
-
-            login: (user) => set({ user }),
-            logout: () => set({ user: null }),
-            addMember: (member) => set((state) => ({ members: [...state.members, member] })),
-        }),
-        {
-            name: 'expense-storage-v3',
-            storage: createJSONStorage(() => AsyncStorage),
+    fetchData: async () => {
+        set({ isLoading: true });
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            set({ isLoading: false });
+            return;
         }
-    )
-);
+
+        // Fetch concurrently
+        const [expensesResult, walletsResult, categoriesResult, profileResult] = await Promise.all([
+            supabase.from('expenses').select(`*, wallet:wallets(*), category:categories(*)`).order('date', { ascending: false }),
+            supabase.from('wallets').select('*'),
+            supabase.from('categories').select('*'),
+            supabase.from('profiles').select('*').eq('id', user.id).single()
+        ]);
+
+        if (expensesResult.error) console.error('Error fetching expenses:', expensesResult.error);
+        if (walletsResult.error) console.error('Error fetching wallets:', walletsResult.error);
+
+        // Transform Supabase data to match app types
+        const expenses: Expense[] = (expensesResult.data || []).map((e: any) => ({
+            id: e.id,
+            amount: Number(e.amount),
+            note: e.note,
+            date: e.date,
+            type: e.type,
+            wallet: e.wallet,
+            category: e.category
+        }));
+
+        set({
+            expenses: expenses,
+            wallets: walletsResult.data || [],
+            categories: categoriesResult.data || [],
+            user: profileResult.data ? {
+                id: profileResult.data.id,
+                name: profileResult.data.full_name || 'User',
+                email: profileResult.data.email,
+                avatar: profileResult.data.avatar_url,
+                role: 'admin'
+            } : null,
+            isLoading: false
+        });
+    },
+
+    addExpense: async (expense) => {
+        const { user } = get();
+        if (!user) return;
+
+        const { data, error } = await supabase.from('expenses').insert({
+            user_id: user.id,
+            amount: expense.amount,
+            note: expense.note,
+            date: expense.date,
+            type: expense.type,
+            wallet_id: expense.wallet.id,
+            category_id: expense.category.id
+        }).select().single();
+
+        if (error) {
+            console.error('Error adding expense:', error);
+            return;
+        }
+
+        // Optimistic Update or Refetch
+        // For simplicity, refetching everything or appending manually
+        const newExpense: Expense = {
+            ...expense,
+            id: data.id
+        };
+
+        set(state => ({ expenses: [newExpense, ...state.expenses] }));
+
+        // Also update wallet balance in DB if needed, but our SQL didn't have triggers for that yet.
+        // Usually better to have a trigger in SQL to update wallet balance.
+        // For now, we just rely on the calculated balance in UI or update manually.
+        // Let's update wallet balance manually in UI for responsiveness is handled by `PocketsScreen` calculation.
+    },
+
+    deleteExpense: async (id) => {
+        const { error } = await supabase.from('expenses').delete().eq('id', id);
+        if (!error) {
+            set(state => ({ expenses: state.expenses.filter(e => e.id !== id) }));
+        }
+    },
+
+    updateExpense: async (id, updatedExpense) => {
+        // This needs mapping back to DB columns
+        // Simplified for now
+        const { error } = await supabase.from('expenses').update({
+            amount: updatedExpense.amount,
+            note: updatedExpense.note
+            // ... other fields
+        }).eq('id', id);
+
+        if (!error) {
+            set(state => ({
+                expenses: state.expenses.map(e => e.id === id ? { ...e, ...updatedExpense } : e)
+            }));
+        }
+    },
+
+    addWallet: async (newWallet) => {
+        const { user } = get();
+        if (!user) return;
+
+        const { data, error } = await supabase.from('wallets').insert({
+            user_id: user.id,
+            name: newWallet.name,
+            icon: newWallet.icon,
+            type: newWallet.type
+        }).select().single();
+
+        if (!error && data) {
+            set(state => ({ wallets: [...state.wallets, data] }));
+        }
+    },
+
+    addCategory: async (newCategory) => {
+        const { user } = get();
+        if (!user) return;
+
+        const { data, error } = await supabase.from('categories').insert({
+            user_id: user.id,
+            name: newCategory.name,
+            icon: newCategory.icon,
+            type: newCategory.type
+        }).select().single();
+
+        if (!error && data) {
+            set(state => ({ categories: [...state.categories, data] }));
+        }
+    },
+
+    addMember: async (newMember) => {
+        set((state) => ({ members: [...state.members, newMember] }));
+    }
+}));
 
 export default useExpenseStore;

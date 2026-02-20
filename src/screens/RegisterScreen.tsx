@@ -3,6 +3,9 @@ import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import useExpenseStore from '../context/useExpenseStore';
+import { Alert } from 'react-native';
+import { supabase } from '../lib/supabase';
+import { Logo } from '../components/Logo';
 
 const { width } = Dimensions.get('window');
 
@@ -13,24 +16,54 @@ const RegisterScreen = ({ navigation }: any) => {
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
-    const handleRegister = () => {
-        if (!name || !email || !password) return;
+
+
+    const handleRegister = async () => {
+        if (!name || !email || !password) {
+            Alert.alert('Error', 'Please fill in all fields');
+            return;
+        }
 
         setIsLoading(true);
-        // Simulate API Call
-        setTimeout(() => {
-            setIsLoading(false);
-            // In a real app, this would create a user in the backend
-            // Here we just simulate a successful login with the new credentials
+
+        const { data, error } = await supabase.auth.signUp({
+            email: email,
+            password: password,
+            options: {
+                data: {
+                    full_name: name,
+                    avatar_url: 'person-circle'
+                }
+            }
+        });
+
+        setIsLoading(false);
+
+        if (error) {
+            Alert.alert('Registration Failed', error.message);
+        } else if (data.user) {
+            // Create default "Cash" wallet for new user
+            const { error: walletError } = await supabase.from('wallets').insert({
+                user_id: data.user.id,
+                name: 'Cash',
+                icon: 'wallet-outline',
+                type: 'wallet'
+            });
+
+            if (walletError) {
+                console.error('Error creating default wallet:', walletError);
+                // Optionally show alert, but usually we proceed
+            }
+
+            // The SQL trigger handles Profile creation.
+            // Login store action handles user state.
             login({
-                id: Date.now().toString(),
+                id: data.user.id,
                 name: name,
                 email: email,
-                avatar: 'person-circle',
-                role: 'admin' // First user is admin
             });
             navigation.navigate('MainTabs');
-        }, 1500);
+        }
     };
 
     return (
@@ -47,10 +80,12 @@ const RegisterScreen = ({ navigation }: any) => {
                         <Ionicons name="arrow-back" size={24} color="#374151" />
                     </TouchableOpacity>
 
+
+
                     {/* Header / Logo Section */}
                     <View className="items-center mb-8">
-                        <View className="w-20 h-20 bg-primary rounded-[28px] items-center justify-center mb-6 shadow-xl shadow-indigo-500/30 transform -rotate-3">
-                            <Ionicons name="person-add" size={40} color="white" />
+                        <View className="w-24 h-24 bg-white rounded-[32px] items-center justify-center mb-6 shadow-xl shadow-indigo-500/10 border border-gray-100 transform rotate-2">
+                            <Logo width={60} height={60} />
                         </View>
                         <Text className="text-3xl font-black text-primary tracking-tighter mb-2">Buat Akun Baru</Text>
                         <Text className="text-gray-400 font-medium tracking-wide text-center">Mulai kelola keuanganmu dengan lebih baik bersama tata arto.</Text>

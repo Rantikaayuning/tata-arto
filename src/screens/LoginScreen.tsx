@@ -3,6 +3,9 @@ import { View, Text, TextInput, TouchableOpacity, Image, KeyboardAvoidingView, P
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import useExpenseStore from '../context/useExpenseStore';
+import { Alert } from 'react-native';
+import { supabase } from '../lib/supabase';
+import { Logo } from '../components/Logo';
 
 const { width } = Dimensions.get('window');
 
@@ -12,19 +15,34 @@ const LoginScreen = ({ navigation }: any) => {
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
-    const handleLogin = () => {
+
+
+    const handleLogin = async () => {
+        if (!email || !password) {
+            Alert.alert('Error', 'Please fill in all fields');
+            return;
+        }
+
         setIsLoading(true);
-        // Simulate API Call
-        setTimeout(() => {
-            setIsLoading(false);
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email: email,
+            password: password,
+        });
+
+        setIsLoading(false);
+
+        if (error) {
+            Alert.alert('Login Failed', error.message);
+        } else if (data.user) {
+            // Fetch profile to get name/avatar if needed, but store fetchData handles it.
+            // Just pass basic info to trigger store's login logic which will fetch data.
             login({
-                id: 'user-1',
-                name: 'Rantika', // Hardcoded for demo
-                email: email,
-                avatar: 'person-circle'
+                id: data.user.id,
+                name: 'Loading...', // Store will update this
+                email: data.user.email || '',
             });
             navigation.goBack();
-        }, 1500);
+        }
     };
 
     return (
@@ -41,10 +59,12 @@ const LoginScreen = ({ navigation }: any) => {
                         <Ionicons name="arrow-back" size={24} color="#374151" />
                     </TouchableOpacity>
 
+
+
                     {/* Header / Logo Section */}
                     <View className="items-center mb-12">
-                        <View className="w-24 h-24 bg-primary rounded-[32px] items-center justify-center mb-6 shadow-xl shadow-indigo-500/30 transform rotate-3">
-                            <Ionicons name="wallet" size={48} color="white" />
+                        <View className="w-28 h-28 bg-white rounded-[32px] items-center justify-center mb-6 shadow-xl shadow-indigo-500/10 border border-gray-100 transform -rotate-2">
+                            <Logo width={72} height={72} />
                         </View>
                         <Text className="text-4xl font-black text-primary tracking-tighter mb-2">tata arto.</Text>
                         <Text className="text-gray-400 font-medium tracking-wide">Kelola Keuangan Bersama</Text>
