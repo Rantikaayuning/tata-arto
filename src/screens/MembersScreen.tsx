@@ -99,9 +99,6 @@ const MembersScreen = ({ navigation }: any) => {
                                 <View className="flex-1">
                                     <Text className="text-white font-bold text-lg">{currentUser.name}</Text>
                                     <Text className="text-indigo-200 text-sm">{currentUser.email}</Text>
-                                    <View className="bg-white/20 px-2 py-0.5 rounded-md self-start mt-2">
-                                        <Text className="text-white text-[10px] font-bold uppercase">Sedang Aktif</Text>
-                                    </View>
                                 </View>
                             </View>
                             <TouchableOpacity

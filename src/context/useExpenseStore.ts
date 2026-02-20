@@ -16,8 +16,8 @@ export interface ExpenseState {
     addExpense: (expense: Omit<Expense, 'id'>) => Promise<void>;
     deleteExpense: (id: string) => Promise<void>;
     updateExpense: (id: string, updatedExpense: Partial<Expense>) => Promise<void>;
-    addWallet: (newWallet: Omit<Wallet, 'id'>) => Promise<void>;
-    addCategory: (newCategory: Omit<Category, 'id'>) => Promise<void>;
+    addWallet: (newWallet: Omit<Wallet, 'id'>) => Promise<Wallet | undefined>;
+    addCategory: (newCategory: Omit<Category, 'id'>) => Promise<Category | undefined>;
     login: (user: User) => void;
     logout: () => Promise<void>;
     addMember: (member: User) => Promise<void>;
@@ -69,8 +69,10 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
             supabase.from('profiles').select('*').eq('id', user.id).single()
         ]);
 
-        if (expensesResult.error) console.error('Error fetching expenses:', expensesResult.error);
-        if (walletsResult.error) console.error('Error fetching wallets:', walletsResult.error);
+        if (expensesResult.error) console.error('Error fetching expenses:', expensesResult.error.message || expensesResult.error);
+        if (walletsResult.error) console.error('Error fetching wallets:', walletsResult.error.message || walletsResult.error);
+        if (categoriesResult.error) console.error('Error fetching categories:', categoriesResult.error.message || categoriesResult.error);
+        if (profileResult.error && profileResult.error.code !== 'PGRST116') console.error('Error fetching profile:', profileResult.error.message || profileResult.error);
 
         // Transform Supabase data to match app types
         const expenses: Expense[] = (expensesResult.data || []).map((e: any) => ({
@@ -87,13 +89,13 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
             expenses: expenses,
             wallets: walletsResult.data || [],
             categories: categoriesResult.data || [],
-            user: profileResult.data ? {
-                id: profileResult.data.id,
-                name: profileResult.data.full_name || 'User',
-                email: profileResult.data.email,
-                avatar: profileResult.data.avatar_url,
+            user: {
+                id: user.id,
+                name: profileResult.data?.full_name || 'User',
+                email: user.email || '',
+                avatar: profileResult.data?.avatar_url,
                 role: 'admin'
-            } : null,
+            },
             isLoading: false
         });
     },
@@ -114,6 +116,7 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
 
         if (error) {
             console.error('Error adding expense:', error);
+            alert(`Gagal menambah: ${error.message}`);
             return;
         }
 
@@ -157,7 +160,7 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
 
     addWallet: async (newWallet) => {
         const { user } = get();
-        if (!user) return;
+        if (!user) return undefined;
 
         const { data, error } = await supabase.from('wallets').insert({
             user_id: user.id,
@@ -166,14 +169,19 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
             type: newWallet.type
         }).select().single();
 
-        if (!error && data) {
+        if (error) {
+            console.error('Error adding wallet:', error);
+            alert(`Gagal menambah dompet: ${error.message}`);
+            return undefined;
+        } else if (data) {
             set(state => ({ wallets: [...state.wallets, data] }));
+            return data;
         }
     },
 
     addCategory: async (newCategory) => {
         const { user } = get();
-        if (!user) return;
+        if (!user) return undefined;
 
         const { data, error } = await supabase.from('categories').insert({
             user_id: user.id,
@@ -182,8 +190,13 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
             type: newCategory.type
         }).select().single();
 
-        if (!error && data) {
+        if (error) {
+            console.error('Error adding category:', error);
+            alert(`Gagal menambah kategori: ${error.message}`);
+            return undefined;
+        } else if (data) {
             set(state => ({ categories: [...state.categories, data] }));
+            return data;
         }
     },
 

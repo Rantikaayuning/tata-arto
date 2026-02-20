@@ -14,8 +14,9 @@ const PocketsScreen = () => {
     const isBalanceHidden = useExpenseStore((state) => state.isBalanceHidden);
     const addWallet = useExpenseStore((state) => state.addWallet);
     const addExpense = useExpenseStore((state) => state.addExpense);
-    const resetAll = useExpenseStore((state) => state.resetAll);
     const user = useExpenseStore((state) => state.user);
+    const categories = useExpenseStore((state) => state.categories) || [];
+    const addCategory = useExpenseStore((state) => state.addCategory);
 
     const [modalVisible, setModalVisible] = useState(false);
     const [newWalletName, setNewWalletName] = useState('');
@@ -58,31 +59,42 @@ const PocketsScreen = () => {
             .reduce((sum, item) => sum + (item.balance || 0), 0);
     }, [walletsList]);
 
-    const handleAddWallet = () => {
+    const handleAddWallet = async () => {
         if (!newWalletName.trim()) {
             Alert.alert('Error', 'Nama dompet tidak boleh kosong');
             return;
         }
 
-        const newWallet: Wallet = {
-            id: Date.now().toString(),
+        const newWalletData = {
             name: newWalletName,
             icon: newWalletIcon,
-            type: 'wallet'
+            type: 'wallet' as const
         };
 
-        addWallet(newWallet);
+        const createdWallet = await addWallet(newWalletData);
+        if (!createdWallet) return;
 
         const amount = parseNumberFromDots(initialAmount);
         if (amount > 0) {
-            addExpense({
-                amount: amount,
-                wallet: newWallet,
-                category: { id: 'initial', name: 'Saldo Awal', icon: 'cash', type: 'income' },
-                note: 'Saldo Awal Dompet',
-                date: new Date().toISOString(),
-                type: 'income'
-            });
+            let incomeCategory = categories.find(c => c.type === 'income');
+            if (!incomeCategory) {
+                incomeCategory = await addCategory({
+                    name: 'Saldo Awal',
+                    icon: 'cash',
+                    type: 'income'
+                });
+            }
+
+            if (incomeCategory) {
+                await addExpense({
+                    amount: amount,
+                    wallet: createdWallet,
+                    category: incomeCategory,
+                    note: 'Saldo Awal Dompet',
+                    date: new Date().toISOString(),
+                    type: 'income'
+                });
+            }
         }
 
         setNewWalletName('');

@@ -45,7 +45,7 @@ const AddExpenseScreen = ({ navigation, route }: any) => {
         setAmount(formatted);
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         const numericAmount = parseNumberFromDots(amount);
 
         if (!numericAmount) {
@@ -61,7 +61,8 @@ const AddExpenseScreen = ({ navigation, route }: any) => {
             return;
         }
 
-        addExpense({
+        // Fire addExpense
+        await addExpense({
             amount: numericAmount,
             wallet: selectedWallet,
             category: selectedCategory,
@@ -73,17 +74,21 @@ const AddExpenseScreen = ({ navigation, route }: any) => {
         navigation.goBack();
     };
 
-    const handleAddCategory = () => {
+    const handleAddCategory = async () => {
         if (!newCategoryName.trim()) {
             Alert.alert('Error', 'Nama kategori tidak boleh kosong');
             return;
         }
-        addCategory({
-            id: Date.now().toString(),
+        const createdCat = await addCategory({
             name: newCategoryName,
             icon: newCategoryIcon,
             type: type
         });
+
+        if (createdCat) {
+            setSelectedCategory(createdCat);
+        }
+
         setNewCategoryName('');
         setModalVisible(false);
     };

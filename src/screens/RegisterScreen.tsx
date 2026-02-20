@@ -42,18 +42,6 @@ const RegisterScreen = ({ navigation }: any) => {
         if (error) {
             Alert.alert('Registration Failed', error.message);
         } else if (data.user) {
-            // Create default "Cash" wallet for new user
-            const { error: walletError } = await supabase.from('wallets').insert({
-                user_id: data.user.id,
-                name: 'Cash',
-                icon: 'wallet-outline',
-                type: 'wallet'
-            });
-
-            if (walletError) {
-                console.error('Error creating default wallet:', walletError);
-                // Optionally show alert, but usually we proceed
-            }
 
             // The SQL trigger handles Profile creation.
             // Login store action handles user state.
