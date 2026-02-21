@@ -1,3 +1,12 @@
+-- 0. Drop Existing Tables & Triggers (Pembersihan / Clean Slate)
+-- PERINGATAN: Ini akan menghapus data dummy lama yang ada di tabel ini
+drop trigger if exists on_auth_user_created on auth.users;
+drop function if exists public.handle_new_user();
+drop table if exists public.expenses cascade;
+drop table if exists public.categories cascade;
+drop table if exists public.wallets cascade;
+drop table if exists public.profiles cascade;
+
 -- 1. Enable UUID Extension
 create extension if not exists "uuid-ossp";
 
