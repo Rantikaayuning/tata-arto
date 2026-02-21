@@ -26,7 +26,7 @@ export interface ExpenseState {
 const useExpenseStore = create<ExpenseState>((set, get) => ({
     user: null,
     expenses: [],
-    wallets: [{ id: 'default-cash', name: 'Cash', icon: 'wallet-outline', type: 'wallet' }],
+    wallets: [],
     categories: [],
     members: [],
     isBalanceHidden: false,
@@ -48,7 +48,7 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
         set({
             user: null,
             expenses: [],
-            wallets: [{ id: 'default-cash', name: 'Cash', icon: 'wallet-outline', type: 'wallet' }],
+            wallets: [],
             categories: []
         });
     },
@@ -74,6 +74,38 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
         if (categoriesResult.error) console.error('Error fetching categories:', categoriesResult.error.message || categoriesResult.error);
         if (profileResult.error && profileResult.error.code !== 'PGRST116') console.error('Error fetching profile:', profileResult.error.message || profileResult.error);
 
+        let profile = profileResult.data;
+
+        // Auto-heal missing profile (if user registered but trigger failed or was added later)
+        if (profileResult.error && profileResult.error.code === 'PGRST116') {
+            const { data: newProfile, error: profileErr } = await supabase.from('profiles').insert({
+                id: user.id,
+                full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+                email: user.email,
+                avatar_url: 'person-circle'
+            }).select().single();
+
+            if (!profileErr && newProfile) {
+                profile = newProfile;
+            }
+        }
+
+        let fetchedWallets = walletsResult.data || [];
+
+        // Auto-create default wallet if none exist (e.g., newly registered user)
+        if (fetchedWallets.length === 0) {
+            const { data: defaultWallet, error: defaultWalletError } = await supabase.from('wallets').insert({
+                user_id: user.id,
+                name: 'Dompet Utama',
+                icon: 'wallet',
+                type: 'wallet'
+            }).select().single();
+
+            if (!defaultWalletError && defaultWallet) {
+                fetchedWallets = [defaultWallet];
+            }
+        }
+
         // Transform Supabase data to match app types
         const expenses: Expense[] = (expensesResult.data || []).map((e: any) => ({
             id: e.id,
@@ -87,13 +119,13 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
 
         set({
             expenses: expenses,
-            wallets: walletsResult.data || [],
+            wallets: fetchedWallets,
             categories: categoriesResult.data || [],
             user: {
                 id: user.id,
-                name: profileResult.data?.full_name || 'User',
+                name: profile?.full_name || user.user_metadata?.full_name || 'User',
                 email: user.email || '',
-                avatar: profileResult.data?.avatar_url,
+                avatar: profile?.avatar_url || 'person-circle',
                 role: 'admin'
             },
             isLoading: false
