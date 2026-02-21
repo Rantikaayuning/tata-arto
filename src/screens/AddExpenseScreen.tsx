@@ -57,22 +57,11 @@ const AddExpenseScreen = ({ navigation, route }: any) => {
             return;
         }
 
-        let finalCategory = selectedCategory;
+        let finalCategory: Category | undefined | null = selectedCategory;
 
         if (type === 'income') {
-            const incomeCat = categories.find(c => c.type === 'income');
-            if (incomeCat) {
-                finalCategory = incomeCat;
-            } else {
-                finalCategory = await addCategory({
-                    name: 'Pendapatan',
-                    icon: 'cash',
-                    type: 'income'
-                }) || null;
-            }
-        }
-
-        if (!finalCategory) {
+            finalCategory = undefined;
+        } else if (!finalCategory) {
             Alert.alert('Error', 'Gagal membuat atau memilih kategori. Silahkan coba lagi.');
             return;
         }
@@ -81,7 +70,7 @@ const AddExpenseScreen = ({ navigation, route }: any) => {
         await addExpense({
             amount: numericAmount,
             wallet: selectedWallet,
-            category: finalCategory,
+            category: finalCategory || undefined,
             note,
             date: date.toISOString(),
             type: type

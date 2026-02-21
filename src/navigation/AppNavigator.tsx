@@ -9,14 +9,13 @@ import PocketDetailScreen from '../screens/PocketDetailScreen';
 import AddExpenseScreen from '../screens/AddExpenseScreen';
 import PocketsScreen from '../screens/PocketsScreen';
 import SearchScreen from '../screens/SearchScreen';
-
-const Tab = createBottomTabNavigator();
-const Stack = createNativeStackNavigator();
-
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import MembersScreen from '../screens/MembersScreen';
 import useExpenseStore from '../context/useExpenseStore';
+
+const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
 
 const MainTabs = () => {
     return (

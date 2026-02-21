@@ -19,7 +19,7 @@ const ExpenseItem: React.FC<ExpenseItemProps> = ({ item }) => {
             <View className={`w-12 h-12 rounded-2xl items-center justify-center mr-4 ${isIncome ? 'bg-emerald-50' : 'bg-rose-50'
                 }`}>
                 <Ionicons
-                    name={item.category.icon as any}
+                    name={(item.category?.icon as any) || (isIncome ? 'cash' : 'pricetag')}
                     size={22}
                     color={isIncome ? '#10B981' : '#F43F5E'}
                 />
@@ -30,7 +30,7 @@ const ExpenseItem: React.FC<ExpenseItemProps> = ({ item }) => {
                 {/* Top Row: Category Name & Amount */}
                 <View className="flex-row justify-between items-start mb-1">
                     <Text className="font-bold text-gray-800 text-[15px] flex-1 mr-2" numberOfLines={1}>
-                        {item.category.name}
+                        {isIncome ? 'Pemasukan' : item.category?.name || 'Lainnya'}
                     </Text>
                     <Text className={`font-extrabold text-[15px] tracking-tight ${isIncome ? 'text-emerald-500' : 'text-rose-500'
                         }`}>

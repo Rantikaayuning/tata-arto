@@ -70,7 +70,7 @@ const MonthlyScreen = () => {
 
             // Category (Expense Only)
             if (exp.type === 'expense') {
-                const catName = exp.category.name;
+                const catName = exp.category?.name || 'Lainnya';
                 if (!catMap[catName]) {
                     catMap[catName] = { amount: 0, color: '#F43F5E', icon: 'pricetag' };
                 }

@@ -82,7 +82,7 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
             date: e.date,
             type: e.type,
             wallet: e.wallet,
-            category: e.category
+            category: e.category || undefined
         }));
 
         set({
@@ -111,7 +111,7 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
             date: expense.date,
             type: expense.type,
             wallet_id: expense.wallet.id,
-            category_id: expense.category.id
+            category_id: expense.category?.id || null
         }).select().single();
 
         if (error) {

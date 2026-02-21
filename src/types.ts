@@ -28,7 +28,7 @@ export interface Expense {
     id?: string; // Sometimes generated
     amount: number;
     wallet: Wallet;
-    category: Category;
+    category?: Category;
     note: string;
     date: string; // ISO string
     type: TransactionType;
