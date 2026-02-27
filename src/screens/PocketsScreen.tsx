@@ -100,7 +100,7 @@ const PocketsScreen = () => {
     const availableIcons = [
         'wallet', 'pricetag', 'card', 'cash',
         'file-tray-full', 'folder', 'save', 'briefcase',
-        'stats-chart', 'pie-chart', 'lock',
+        'stats-chart', 'pie-chart', 'lock-closed',
         'home', 'flash', 'star', 'medkit',
         'school', 'gift', 'game-controller'
     ];

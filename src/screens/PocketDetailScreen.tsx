@@ -13,6 +13,9 @@ const PocketDetailScreen = () => {
     const navigation = useNavigation();
     const { wallet } = (route.params as { wallet: Wallet }) || {};
 
+    const expenses = useExpenseStore((state) => state.expenses) || [];
+    const isBalanceHidden = useExpenseStore((state) => state.isBalanceHidden);
+
     if (!wallet) {
         return (
             <SafeAreaView className="flex-1 bg-white justify-center items-center">
@@ -23,8 +26,6 @@ const PocketDetailScreen = () => {
         );
     }
 
-    const expenses = useExpenseStore((state) => state.expenses) || [];
-    const isBalanceHidden = useExpenseStore((state) => state.isBalanceHidden);
 
     const renderHiddenAmount = (amount: number) => isBalanceHidden ? '••••••' : formatCurrency(amount);
 

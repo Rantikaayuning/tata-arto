@@ -67,4 +67,4 @@ const ExpenseItem: React.FC<ExpenseItemProps> = ({ item }) => {
     );
 };
 
-export default ExpenseItem;
+export default React.memo(ExpenseItem);

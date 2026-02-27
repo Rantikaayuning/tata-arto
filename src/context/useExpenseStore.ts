@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { Alert } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { Expense, Wallet, Category, User, FamilyInvitation } from '../types';
 
@@ -348,7 +349,7 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
     addExpense: async (expense) => {
         const { data: { user: authUser } } = await supabase.auth.getUser();
         if (!authUser) {
-            alert('Sesi login telah berakhir. Silakan login ulang.');
+            Alert.alert('Session Expired', 'Sesi login telah berakhir. Silakan login ulang.');
             return;
         }
 
@@ -369,7 +370,7 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
 
         if (error) {
             console.error('Error adding expense:', error);
-            alert(`Gagal menambah: ${error.message}`);
+            Alert.alert('Error', `Gagal menambah: ${error.message}`);
             return;
         }
 
@@ -400,7 +401,7 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
     addWallet: async (newWallet) => {
         const { data: { user: authUser } } = await supabase.auth.getUser();
         if (!authUser) {
-            alert('Sesi login telah berakhir. Silakan login ulang.');
+            Alert.alert('Session Expired', 'Sesi login telah berakhir. Silakan login ulang.');
             return undefined;
         }
 
@@ -413,7 +414,7 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
 
         if (error) {
             console.error('Error adding wallet:', error);
-            alert(`Gagal menambah dompet: ${error.message}`);
+            Alert.alert('Error', `Gagal menambah dompet: ${error.message}`);
             return undefined;
         } else if (data) {
             set(state => ({ wallets: [...state.wallets, data] }));
@@ -424,7 +425,7 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
     addCategory: async (newCategory) => {
         const { data: { user: authUser } } = await supabase.auth.getUser();
         if (!authUser) {
-            alert('Sesi login telah berakhir. Silakan login ulang.');
+            Alert.alert('Session Expired', 'Sesi login telah berakhir. Silakan login ulang.');
             return undefined;
         }
 
@@ -437,7 +438,7 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
 
         if (error) {
             console.error('Error adding category:', error);
-            alert(`Gagal menambah kategori: ${error.message}`);
+            Alert.alert('Error', `Gagal menambah kategori: ${error.message}`);
             return undefined;
         } else if (data) {
             set(state => ({ categories: [...state.categories, data] }));
