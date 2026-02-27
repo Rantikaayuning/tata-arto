@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
-import { Expense, Wallet, Category, User } from '../types';
+import { Expense, Wallet, Category, User, FamilyInvitation } from '../types';
 
 export interface ExpenseState {
     expenses: Expense[];
@@ -9,6 +9,8 @@ export interface ExpenseState {
     isBalanceHidden: boolean;
     user: User | null;
     members: User[];
+    pendingInvitations: FamilyInvitation[];
+    familyId: string | null;
     isLoading: boolean;
 
     toggleBalanceVisibility: () => void;
@@ -20,7 +22,10 @@ export interface ExpenseState {
     addCategory: (newCategory: Omit<Category, 'id'>) => Promise<Category | undefined>;
     login: (user: User) => void;
     logout: () => Promise<void>;
-    addMember: (member: User) => Promise<void>;
+    inviteMember: (email: string) => Promise<{ success: boolean; message: string }>;
+    removeMember: (userId: string) => Promise<void>;
+    cancelInvitation: (invitationId: string) => Promise<void>;
+    checkAndAcceptInvitations: () => Promise<void>;
 }
 
 const useExpenseStore = create<ExpenseState>((set, get) => ({
@@ -29,6 +34,8 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
     wallets: [],
     categories: [],
     members: [],
+    pendingInvitations: [],
+    familyId: null,
     isBalanceHidden: false,
     isLoading: false,
 
@@ -49,8 +56,36 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
             user: null,
             expenses: [],
             wallets: [],
-            categories: []
+            categories: [],
+            members: [],
+            pendingInvitations: [],
+            familyId: null,
         });
+    },
+
+    checkAndAcceptInvitations: async () => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user?.email) return;
+
+        const { data: invitations } = await supabase
+            .from('family_invitations')
+            .select('*')
+            .eq('invited_email', user.email)
+            .eq('status', 'pending');
+
+        if (!invitations || invitations.length === 0) return;
+
+        for (const inv of invitations) {
+            await supabase.from('family_members').insert({
+                family_id: inv.family_id,
+                user_id: user.id,
+                role: 'member'
+            });
+
+            await supabase.from('family_invitations')
+                .update({ status: 'accepted' })
+                .eq('id', inv.id);
+        }
     },
 
     fetchData: async () => {
@@ -61,52 +96,115 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
             return;
         }
 
-        // Fetch concurrently
-        const [expensesResult, walletsResult, categoriesResult, profileResult] = await Promise.all([
-            supabase.from('expenses').select(`*, wallet:wallets(*), category:categories(*)`).order('date', { ascending: false }),
-            supabase.from('wallets').select('*'),
-            supabase.from('categories').select('*'),
-            supabase.from('profiles').select('*').eq('id', user.id).single()
-        ]);
+        // Auto-accept pending invitations on login
+        await get().checkAndAcceptInvitations();
 
-        if (expensesResult.error) console.error('Error fetching expenses:', expensesResult.error.message || expensesResult.error);
-        if (walletsResult.error) console.error('Error fetching wallets:', walletsResult.error.message || walletsResult.error);
-        if (categoriesResult.error) console.error('Error fetching categories:', categoriesResult.error.message || categoriesResult.error);
-        if (profileResult.error && profileResult.error.code !== 'PGRST116') console.error('Error fetching profile:', profileResult.error.message || profileResult.error);
+        // Fetch profile
+        const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
 
-        let profile = profileResult.data;
-
-        // Auto-heal missing profile (if user registered but trigger failed or was added later)
-        if (profileResult.error && profileResult.error.code === 'PGRST116') {
-            const { data: newProfile, error: profileErr } = await supabase.from('profiles').insert({
+        // Auto-heal missing profile
+        let currentProfile = profile;
+        if (profileError && profileError.code === 'PGRST116') {
+            const { data: newProfile } = await supabase.from('profiles').insert({
                 id: user.id,
                 full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
                 email: user.email,
                 avatar_url: 'person-circle'
             }).select().single();
+            if (newProfile) currentProfile = newProfile;
+        }
 
-            if (!profileErr && newProfile) {
-                profile = newProfile;
+        // Fetch family membership
+        const { data: myMembership } = await supabase
+            .from('family_members')
+            .select('family_id, role')
+            .eq('user_id', user.id)
+            .limit(1)
+            .single();
+
+        let familyId = myMembership?.family_id || null;
+
+        // Auto-create family if none exists
+        if (!familyId) {
+            const { data: newFamily } = await supabase
+                .from('families')
+                .insert({
+                    name: 'Keluarga ' + (currentProfile?.full_name || 'Saya'),
+                    created_by: user.id
+                })
+                .select()
+                .single();
+
+            if (newFamily) {
+                await supabase.from('family_members').insert({
+                    family_id: newFamily.id,
+                    user_id: user.id,
+                    role: 'admin'
+                });
+                familyId = newFamily.id;
             }
         }
 
+        // Fetch all data (RLS automatically filters by family)
+        const [expensesResult, walletsResult, categoriesResult] = await Promise.all([
+            supabase.from('expenses').select('*, wallet:wallets(*), category:categories(*)').order('date', { ascending: false }),
+            supabase.from('wallets').select('*'),
+            supabase.from('categories').select('*'),
+        ]);
+
+        if (expensesResult.error) console.error('Error fetching expenses:', expensesResult.error.message);
+        if (walletsResult.error) console.error('Error fetching wallets:', walletsResult.error.message);
+        if (categoriesResult.error) console.error('Error fetching categories:', categoriesResult.error.message);
+
         let fetchedWallets = walletsResult.data || [];
 
-        // Auto-create default wallet if none exist (e.g., newly registered user)
+        // Auto-create default wallet if none
         if (fetchedWallets.length === 0) {
-            const { data: defaultWallet, error: defaultWalletError } = await supabase.from('wallets').insert({
+            const { data: defaultWallet } = await supabase.from('wallets').insert({
                 user_id: user.id,
                 name: 'Dompet Utama',
                 icon: 'wallet',
                 type: 'wallet'
             }).select().single();
+            if (defaultWallet) fetchedWallets = [defaultWallet];
+        }
 
-            if (!defaultWalletError && defaultWallet) {
-                fetchedWallets = [defaultWallet];
+        // Fetch family members with profiles
+        let members: User[] = [];
+        if (familyId) {
+            const { data: familyMembers } = await supabase
+                .from('family_members')
+                .select('user_id, role, profiles:user_id(id, full_name, email, avatar_url)')
+                .eq('family_id', familyId);
+
+            if (familyMembers) {
+                members = familyMembers.map((fm: any) => ({
+                    id: fm.profiles.id,
+                    name: fm.profiles.full_name || 'User',
+                    email: fm.profiles.email || '',
+                    avatar: fm.profiles.avatar_url || 'person-circle',
+                    role: fm.role,
+                }));
             }
         }
 
-        // Transform Supabase data to match app types
+        // Fetch pending invitations
+        let pendingInvitations: FamilyInvitation[] = [];
+        if (familyId) {
+            const { data: invitations } = await supabase
+                .from('family_invitations')
+                .select('*')
+                .eq('family_id', familyId)
+                .eq('status', 'pending');
+
+            if (invitations) pendingInvitations = invitations;
+        }
+
+        // Transform expenses
         const expenses: Expense[] = (expensesResult.data || []).map((e: any) => ({
             id: e.id,
             amount: Number(e.amount),
@@ -118,18 +216,114 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
         }));
 
         set({
-            expenses: expenses,
+            expenses,
             wallets: fetchedWallets,
             categories: categoriesResult.data || [],
+            members,
+            pendingInvitations,
+            familyId,
             user: {
                 id: user.id,
-                name: profile?.full_name || user.user_metadata?.full_name || 'User',
+                name: currentProfile?.full_name || user.user_metadata?.full_name || 'User',
                 email: user.email || '',
-                avatar: profile?.avatar_url || 'person-circle',
-                role: 'admin'
+                avatar: currentProfile?.avatar_url || 'person-circle',
+                role: myMembership?.role || 'admin'
             },
             isLoading: false
         });
+    },
+
+    inviteMember: async (email: string) => {
+        const { user, familyId } = get();
+        if (!user || !familyId) return { success: false, message: 'Anda belum login.' };
+
+        const trimmedEmail = email.trim().toLowerCase();
+
+        // Don't invite yourself
+        if (trimmedEmail === user.email) {
+            return { success: false, message: 'Anda tidak bisa mengundang diri sendiri.' };
+        }
+
+        // Check if email is already a member
+        const existingMembers = get().members;
+        if (existingMembers.some(m => m.email === trimmedEmail)) {
+            return { success: false, message: 'Email ini sudah menjadi anggota keluarga.' };
+        }
+
+        // Check if invitation already pending
+        const existingInvitations = get().pendingInvitations;
+        if (existingInvitations.some(i => i.invited_email === trimmedEmail)) {
+            return { success: false, message: 'Undangan sudah dikirim untuk email ini.' };
+        }
+
+        // Check if user already exists in profiles
+        const { data: existingProfile } = await supabase
+            .from('profiles')
+            .select('id, full_name, email')
+            .eq('email', trimmedEmail)
+            .single();
+
+        if (existingProfile) {
+            // User exists - add directly to family
+            const { error: memberError } = await supabase.from('family_members').insert({
+                family_id: familyId,
+                user_id: existingProfile.id,
+                role: 'member'
+            });
+
+            if (memberError) {
+                if (memberError.code === '23505') {
+                    return { success: false, message: 'User sudah menjadi anggota keluarga.' };
+                }
+                return { success: false, message: memberError.message };
+            }
+
+            // Create accepted invitation record
+            await supabase.from('family_invitations').insert({
+                family_id: familyId,
+                invited_email: trimmedEmail,
+                invited_by: user.id,
+                status: 'accepted'
+            });
+
+            await get().fetchData();
+            return { success: true, message: `${existingProfile.full_name || trimmedEmail} berhasil ditambahkan ke keluarga!` };
+        } else {
+            // User doesn't exist - create pending invitation
+            const { error: invError } = await supabase.from('family_invitations').insert({
+                family_id: familyId,
+                invited_email: trimmedEmail,
+                invited_by: user.id,
+                status: 'pending'
+            });
+
+            if (invError) {
+                if (invError.code === '23505') {
+                    return { success: false, message: 'Undangan sudah dikirim untuk email ini.' };
+                }
+                return { success: false, message: invError.message };
+            }
+
+            await get().fetchData();
+            return { success: true, message: `Undangan terkirim ke ${trimmedEmail}. User perlu mendaftar terlebih dahulu.` };
+        }
+    },
+
+    removeMember: async (userId: string) => {
+        const { familyId } = get();
+        if (!familyId) return;
+
+        await supabase.from('family_members')
+            .delete()
+            .eq('family_id', familyId)
+            .eq('user_id', userId);
+
+        await get().fetchData();
+    },
+
+    cancelInvitation: async (invitationId: string) => {
+        await supabase.from('family_invitations').delete().eq('id', invitationId);
+        await get().fetchData();
     },
 
     addExpense: async (expense) => {
@@ -160,19 +354,8 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
             return;
         }
 
-        // Optimistic Update or Refetch
-        // For simplicity, refetching everything or appending manually
-        const newExpense: Expense = {
-            ...expense,
-            id: data.id
-        };
-
+        const newExpense: Expense = { ...expense, id: data.id };
         set(state => ({ expenses: [newExpense, ...state.expenses] }));
-
-        // Also update wallet balance in DB if needed, but our SQL didn't have triggers for that yet.
-        // Usually better to have a trigger in SQL to update wallet balance.
-        // For now, we just rely on the calculated balance in UI or update manually.
-        // Let's update wallet balance manually in UI for responsiveness is handled by `PocketsScreen` calculation.
     },
 
     deleteExpense: async (id) => {
@@ -183,12 +366,9 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
     },
 
     updateExpense: async (id, updatedExpense) => {
-        // This needs mapping back to DB columns
-        // Simplified for now
         const { error } = await supabase.from('expenses').update({
             amount: updatedExpense.amount,
             note: updatedExpense.note
-            // ... other fields
         }).eq('id', id);
 
         if (!error) {
@@ -199,14 +379,11 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
     },
 
     addWallet: async (newWallet) => {
-        // Always get the REAL auth user from Supabase to ensure auth.uid() matches
         const { data: { user: authUser } } = await supabase.auth.getUser();
         if (!authUser) {
             alert('Sesi login telah berakhir. Silakan login ulang.');
             return undefined;
         }
-
-        console.log('DEBUG addWallet - auth.uid():', authUser.id);
 
         const { data, error } = await supabase.from('wallets').insert({
             user_id: authUser.id,
@@ -248,10 +425,6 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
             return data;
         }
     },
-
-    addMember: async (newMember) => {
-        set((state) => ({ members: [...state.members, newMember] }));
-    }
 }));
 
 export default useExpenseStore;

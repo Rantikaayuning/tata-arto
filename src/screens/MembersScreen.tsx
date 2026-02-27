@@ -1,33 +1,73 @@
 import React, { useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Modal, TextInput, Alert } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, Modal, TextInput, Alert, SectionList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import useExpenseStore from '../context/useExpenseStore';
 
 const MembersScreen = ({ navigation }: any) => {
     const members = useExpenseStore((state) => state.members) || [];
-    const addMember = useExpenseStore((state) => state.addMember);
+    const pendingInvitations = useExpenseStore((state) => state.pendingInvitations) || [];
+    const inviteMember = useExpenseStore((state) => state.inviteMember);
+    const removeMember = useExpenseStore((state) => state.removeMember);
+    const cancelInvitation = useExpenseStore((state) => state.cancelInvitation);
     const currentUser = useExpenseStore((state) => state.user);
     const logout = useExpenseStore((state) => state.logout);
 
     const [modalVisible, setModalVisible] = useState(false);
-    const [newMemberName, setNewMemberName] = useState('');
-    const [newMemberEmail, setNewMemberEmail] = useState('');
+    const [inviteEmail, setInviteEmail] = useState('');
+    const [isInviting, setIsInviting] = useState(false);
 
-    const handleInvite = () => {
-        if (!newMemberName || !newMemberEmail) return;
+    const isAdmin = currentUser?.role === 'admin';
 
-        addMember({
-            id: Date.now().toString(),
-            name: newMemberName,
-            email: newMemberEmail,
-            role: 'member',
-            avatar: 'person-outline'
-        });
+    const handleInvite = async () => {
+        if (!inviteEmail.trim()) {
+            Alert.alert('Error', 'Mohon masukkan email');
+            return;
+        }
 
-        setNewMemberName('');
-        setNewMemberEmail('');
-        setModalVisible(false);
+        setIsInviting(true);
+        const result = await inviteMember(inviteEmail.trim());
+        setIsInviting(false);
+
+        if (result.success) {
+            Alert.alert('Berhasil', result.message);
+            setInviteEmail('');
+            setModalVisible(false);
+        } else {
+            Alert.alert('Gagal', result.message);
+        }
+    };
+
+    const handleRemoveMember = (member: any) => {
+        if (member.id === currentUser?.id) return;
+
+        Alert.alert(
+            'Hapus Anggota',
+            `Apakah Anda yakin ingin menghapus ${member.name} dari keluarga?`,
+            [
+                { text: 'Batal', style: 'cancel' },
+                {
+                    text: 'Hapus',
+                    style: 'destructive',
+                    onPress: () => removeMember(member.id)
+                }
+            ]
+        );
+    };
+
+    const handleCancelInvitation = (invitation: any) => {
+        Alert.alert(
+            'Batalkan Undangan',
+            `Batalkan undangan untuk ${invitation.invited_email}?`,
+            [
+                { text: 'Tidak', style: 'cancel' },
+                {
+                    text: 'Batalkan',
+                    style: 'destructive',
+                    onPress: () => cancelInvitation(invitation.id)
+                }
+            ]
+        );
     };
 
     const handleLogout = () => {
@@ -61,14 +101,46 @@ const MembersScreen = ({ navigation }: any) => {
                 />
             </View>
             <View className="flex-1">
-                <Text className="font-bold text-gray-800 text-base">{item.name} {item.id === currentUser?.id ? '(Saya)' : ''}</Text>
+                <Text className="font-bold text-gray-800 text-base">
+                    {item.name} {item.id === currentUser?.id ? '(Saya)' : ''}
+                </Text>
                 <Text className="text-gray-400 text-xs">{item.email}</Text>
             </View>
-            <View className={`px-3 py-1 rounded-full ${item.role === 'admin' ? 'bg-primary' : 'bg-gray-100'}`}>
-                <Text className={`text-xs font-bold ${item.role === 'admin' ? 'text-white' : 'text-gray-500'}`}>
-                    {item.role === 'admin' ? 'Pemilik' : 'Anggota'}
-                </Text>
+            <View className="flex-row items-center">
+                <View className={`px-3 py-1 rounded-full ${item.role === 'admin' ? 'bg-primary' : 'bg-gray-100'}`}>
+                    <Text className={`text-xs font-bold ${item.role === 'admin' ? 'text-white' : 'text-gray-500'}`}>
+                        {item.role === 'admin' ? 'Pemilik' : 'Anggota'}
+                    </Text>
+                </View>
+                {isAdmin && item.id !== currentUser?.id && (
+                    <TouchableOpacity
+                        onPress={() => handleRemoveMember(item)}
+                        className="ml-2 p-2 rounded-full bg-red-50"
+                    >
+                        <Ionicons name="close" size={16} color="#EF4444" />
+                    </TouchableOpacity>
+                )}
             </View>
+        </View>
+    );
+
+    const renderPendingInvitation = ({ item }: any) => (
+        <View className="flex-row items-center bg-amber-50 p-4 mb-3 rounded-3xl border border-amber-100">
+            <View className="w-12 h-12 rounded-full items-center justify-center mr-4 bg-amber-100">
+                <Ionicons name="time-outline" size={20} color="#F59E0B" />
+            </View>
+            <View className="flex-1">
+                <Text className="font-bold text-gray-800 text-base">{item.invited_email}</Text>
+                <Text className="text-amber-600 text-xs font-medium">Menunggu pendaftaran</Text>
+            </View>
+            {isAdmin && (
+                <TouchableOpacity
+                    onPress={() => handleCancelInvitation(item)}
+                    className="p-2 rounded-full bg-amber-100"
+                >
+                    <Ionicons name="close" size={16} color="#F59E0B" />
+                </TouchableOpacity>
+            )}
         </View>
     );
 
@@ -89,7 +161,7 @@ const MembersScreen = ({ navigation }: any) => {
             <View className="flex-1 px-6 pt-6">
                 {/* Current User Card */}
                 {currentUser && (
-                    <View className="mb-8">
+                    <View className="mb-6">
                         <Text className="text-gray-400 font-bold text-xs uppercase tracking-widest mb-3 pl-1">Login Sebagai</Text>
                         <View className="bg-primary p-5 rounded-[24px] shadow-lg shadow-indigo-500/30 flex-row items-center justify-between">
                             <View className="flex-row items-center flex-1">
@@ -111,33 +183,56 @@ const MembersScreen = ({ navigation }: any) => {
                     </View>
                 )}
 
-                <View className="mb-6 bg-indigo-50 p-4 rounded-2xl border border-indigo-100 flex-row items-start">
+                <View className="mb-4 bg-indigo-50 p-4 rounded-2xl border border-indigo-100 flex-row items-start">
                     <Ionicons name="information-circle" size={20} color="#343B71" style={{ marginTop: 2 }} />
                     <Text className="ml-3 text-indigo-900 leading-5 flex-1 text-sm">
-                        Anggota yang ditambahkan dapat melihat dan mengubah catatan keuangan ini bersama-sama.
+                        Anggota keluarga dapat melihat catatan keuangan bersama. Undang anggota dengan email mereka.
                     </Text>
                 </View>
 
-                <Text className="text-gray-400 font-bold text-xs uppercase tracking-widest mb-3 pl-1">Daftar Anggota</Text>
+                {/* Members List */}
+                <Text className="text-gray-400 font-bold text-xs uppercase tracking-widest mb-3 pl-1">
+                    Anggota ({members.length})
+                </Text>
                 <FlatList
                     data={members}
                     keyExtractor={item => item.id}
                     renderItem={renderMember}
-                    contentContainerStyle={{ paddingBottom: 100 }}
-                    showsVerticalScrollIndicator={false}
+                    scrollEnabled={false}
                 />
+
+                {/* Pending Invitations */}
+                {pendingInvitations.length > 0 && (
+                    <View className="mt-6">
+                        <Text className="text-gray-400 font-bold text-xs uppercase tracking-widest mb-3 pl-1">
+                            Undangan Tertunda ({pendingInvitations.length})
+                        </Text>
+                        <FlatList
+                            data={pendingInvitations}
+                            keyExtractor={item => item.id}
+                            renderItem={renderPendingInvitation}
+                            scrollEnabled={false}
+                        />
+                    </View>
+                )}
+
+                <View style={{ height: 100 }} />
             </View>
 
-            <View className="absolute bottom-10 right-6 left-6">
-                <TouchableOpacity
-                    onPress={() => setModalVisible(true)}
-                    className="bg-primary py-4 rounded-2xl flex-row items-center justify-center shadow-lg shadow-indigo-500/30"
-                >
-                    <Ionicons name="person-add" size={20} color="white" />
-                    <Text className="text-white font-bold text-lg ml-2">Undang Anggota</Text>
-                </TouchableOpacity>
-            </View>
+            {/* Invite Button (Admin only) */}
+            {isAdmin && (
+                <View className="absolute bottom-10 right-6 left-6">
+                    <TouchableOpacity
+                        onPress={() => setModalVisible(true)}
+                        className="bg-primary py-4 rounded-2xl flex-row items-center justify-center shadow-lg shadow-indigo-500/30"
+                    >
+                        <Ionicons name="person-add" size={20} color="white" />
+                        <Text className="text-white font-bold text-lg ml-2">Undang Anggota</Text>
+                    </TouchableOpacity>
+                </View>
+            )}
 
+            {/* Invite Modal */}
             <Modal
                 transparent={true}
                 visible={modalVisible}
@@ -146,20 +241,16 @@ const MembersScreen = ({ navigation }: any) => {
             >
                 <View className="flex-1 justify-center items-center bg-black/60 px-6">
                     <View className="bg-white rounded-[32px] p-8 w-full shadow-2xl">
-                        <View className="flex-row justify-between items-center mb-8">
+                        <View className="flex-row justify-between items-center mb-4">
                             <Text className="text-2xl font-bold text-gray-800">Undang Anggota</Text>
                             <TouchableOpacity onPress={() => setModalVisible(false)} className="p-2 bg-gray-50 rounded-full">
                                 <Ionicons name="close" size={24} color="#374151" />
                             </TouchableOpacity>
                         </View>
 
-                        <Text className="text-gray-500 font-bold text-xs uppercase tracking-wider mb-2">Nama</Text>
-                        <TextInput
-                            className="bg-gray-50 p-4 rounded-xl border border-gray-200 mb-6 font-bold text-gray-800"
-                            placeholder="Nama Panggilan"
-                            value={newMemberName}
-                            onChangeText={setNewMemberName}
-                        />
+                        <Text className="text-gray-400 text-sm mb-6 leading-5">
+                            Masukkan email anggota keluarga. Jika sudah terdaftar, akan langsung ditambahkan. Jika belum, undangan akan menunggu sampai mereka mendaftar.
+                        </Text>
 
                         <Text className="text-gray-500 font-bold text-xs uppercase tracking-wider mb-2">Email</Text>
                         <TextInput
@@ -167,15 +258,18 @@ const MembersScreen = ({ navigation }: any) => {
                             placeholder="alamat@email.com"
                             keyboardType="email-address"
                             autoCapitalize="none"
-                            value={newMemberEmail}
-                            onChangeText={setNewMemberEmail}
+                            value={inviteEmail}
+                            onChangeText={setInviteEmail}
                         />
 
                         <TouchableOpacity
                             onPress={handleInvite}
+                            disabled={isInviting}
                             className="bg-primary py-4 rounded-2xl items-center shadow-lg"
                         >
-                            <Text className="text-white font-bold text-lg">Kirim Undangan</Text>
+                            <Text className="text-white font-bold text-lg">
+                                {isInviting ? 'Mengirim...' : 'Kirim Undangan'}
+                            </Text>
                         </TouchableOpacity>
                     </View>
                 </View>

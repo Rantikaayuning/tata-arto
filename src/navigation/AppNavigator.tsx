@@ -12,6 +12,7 @@ import SearchScreen from '../screens/SearchScreen';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import MembersScreen from '../screens/MembersScreen';
+import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
 import useExpenseStore from '../context/useExpenseStore';
 
 const Tab = createBottomTabNavigator();
@@ -108,6 +109,11 @@ const AppNavigator = () => {
             <Stack.Screen
                 name="Register"
                 component={RegisterScreen}
+                options={{ animation: 'slide_from_right' }}
+            />
+            <Stack.Screen
+                name="ForgotPassword"
+                component={ForgotPasswordScreen}
                 options={{ animation: 'slide_from_right' }}
             />
             <Stack.Screen

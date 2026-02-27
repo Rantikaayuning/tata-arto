@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import useExpenseStore from '../context/useExpenseStore';
 import { Alert } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { Logo } from '../components/Logo';
@@ -10,49 +9,115 @@ import { Logo } from '../components/Logo';
 const { width } = Dimensions.get('window');
 
 const RegisterScreen = ({ navigation }: any) => {
-    const login = useExpenseStore((state) => state.login);
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-
-
+    const [isRegistered, setIsRegistered] = useState(false);
 
     const handleRegister = async () => {
-        if (!name || !email || !password) {
-            Alert.alert('Error', 'Please fill in all fields');
+        const trimmedName = name.trim();
+        const trimmedEmail = email.trim().toLowerCase();
+        const trimmedPassword = password.trim();
+
+        if (!trimmedName || !trimmedEmail || !trimmedPassword) {
+            Alert.alert('Error', 'Mohon isi semua field');
+            return;
+        }
+
+        if (trimmedPassword.length < 6) {
+            Alert.alert('Error', 'Password minimal 6 karakter');
             return;
         }
 
         setIsLoading(true);
 
-        const { data, error } = await supabase.auth.signUp({
-            email: email,
-            password: password,
-            options: {
-                data: {
-                    full_name: name,
-                    avatar_url: 'person-circle'
+        try {
+            const { data, error } = await supabase.auth.signUp({
+                email: trimmedEmail,
+                password: trimmedPassword,
+                options: {
+                    data: {
+                        full_name: trimmedName,
+                        avatar_url: 'person-circle'
+                    }
                 }
-            }
-        });
-
-        setIsLoading(false);
-
-        if (error) {
-            Alert.alert('Registration Failed', error.message);
-        } else if (data.user) {
-
-            // The SQL trigger handles Profile creation.
-            // Login store action handles user state.
-            login({
-                id: data.user.id,
-                name: name,
-                email: email,
             });
-            navigation.navigate('MainTabs');
+
+            setIsLoading(false);
+
+            if (error) {
+                let errorMessage = error.message;
+                if (error.message.includes('already registered') || error.message.includes('already been registered')) {
+                    errorMessage = 'Email ini sudah terdaftar. Silakan login atau gunakan email lain.';
+                }
+                Alert.alert('Registrasi Gagal', errorMessage);
+                return;
+            }
+
+            // Check for fake signup (email already exists with confirmation enabled)
+            if (data.user && data.user.identities && data.user.identities.length === 0) {
+                Alert.alert(
+                    'Email Sudah Terdaftar',
+                    'Email ini sudah digunakan. Silakan login atau reset password jika lupa.',
+                    [
+                        { text: 'Login', onPress: () => navigation.navigate('Login') },
+                        { text: 'Lupa Password', onPress: () => navigation.navigate('ForgotPassword') },
+                        { text: 'OK', style: 'cancel' }
+                    ]
+                );
+                return;
+            }
+
+            if (data.user) {
+                // Show email confirmation screen
+                setIsRegistered(true);
+            }
+        } catch (e: any) {
+            setIsLoading(false);
+            console.log('Register exception:', e);
+            Alert.alert('Error', 'Terjadi kesalahan koneksi. Silakan coba lagi.');
         }
     };
+
+    // Success state - show email confirmation message
+    if (isRegistered) {
+        return (
+            <SafeAreaView className="flex-1 bg-[#F7F8FA]">
+                <View className="flex-1 justify-center px-8">
+                    <View className="bg-white p-8 rounded-[40px] shadow-sm border border-gray-100 items-center">
+                        <View className="w-20 h-20 bg-indigo-50 rounded-full items-center justify-center mb-6">
+                            <Ionicons name="mail-unread-outline" size={40} color="#343B71" />
+                        </View>
+                        <Text className="text-2xl font-bold text-gray-800 mb-3 text-center">Cek Email Anda!</Text>
+                        <Text className="text-gray-400 text-center leading-6 mb-3">
+                            Kami telah mengirim link konfirmasi ke:
+                        </Text>
+                        <Text className="text-primary font-bold text-center mb-4">
+                            {email.trim().toLowerCase()}
+                        </Text>
+                        <Text className="text-gray-400 text-center leading-6 mb-8">
+                            Klik link di email untuk mengaktifkan akun Anda, lalu kembali ke sini untuk login.
+                        </Text>
+
+                        <View className="bg-amber-50 p-4 rounded-2xl border border-amber-100 flex-row items-start mb-8 w-full">
+                            <Ionicons name="alert-circle" size={20} color="#F59E0B" style={{ marginTop: 2 }} />
+                            <Text className="ml-3 text-amber-800 leading-5 flex-1 text-sm">
+                                Tidak menerima email? Cek folder spam atau coba daftar ulang dengan email yang sama.
+                            </Text>
+                        </View>
+
+                        <TouchableOpacity
+                            onPress={() => navigation.navigate('Login')}
+                            className="bg-primary py-4 rounded-2xl items-center w-full shadow-lg shadow-indigo-900/20"
+                        >
+                            <Text className="text-white font-bold text-lg">Ke Halaman Login</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </SafeAreaView>
+        );
+    }
 
     return (
         <SafeAreaView className="flex-1 bg-[#F7F8FA]">
@@ -67,8 +132,6 @@ const RegisterScreen = ({ navigation }: any) => {
                     >
                         <Ionicons name="arrow-back" size={24} color="#374151" />
                     </TouchableOpacity>
-
-
 
                     {/* Header / Logo Section */}
                     <View className="items-center mb-8">
@@ -119,7 +182,7 @@ const RegisterScreen = ({ navigation }: any) => {
                                 <Ionicons name="lock-closed-outline" size={20} color="#9CA3AF" />
                                 <TextInput
                                     className="flex-1 ml-3 font-medium text-gray-800"
-                                    placeholder="••••••••"
+                                    placeholder="Minimal 6 karakter"
                                     placeholderTextColor="#D1D5DB"
                                     value={password}
                                     onChangeText={setPassword}
@@ -142,7 +205,7 @@ const RegisterScreen = ({ navigation }: any) => {
 
                         <View className="flex-row justify-center mt-6">
                             <Text className="text-gray-400">Sudah punya akun? </Text>
-                            <TouchableOpacity onPress={() => navigation.goBack()}>
+                            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
                                 <Text className="text-primary font-bold">Masuk</Text>
                             </TouchableOpacity>
                         </View>

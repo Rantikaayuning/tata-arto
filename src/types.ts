@@ -25,11 +25,20 @@ export interface Wallet {
 }
 
 export interface Expense {
-    id?: string; // Sometimes generated
+    id?: string;
     amount: number;
     wallet: Wallet;
     category?: Category;
     note: string;
-    date: string; // ISO string
+    date: string;
     type: TransactionType;
+}
+
+export interface FamilyInvitation {
+    id: string;
+    family_id: string;
+    invited_email: string;
+    invited_by: string;
+    status: 'pending' | 'accepted' | 'declined';
+    created_at: string;
 }

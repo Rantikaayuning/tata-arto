@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image, KeyboardAvoidingView, Platform, Dimensions } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import useExpenseStore from '../context/useExpenseStore';
@@ -14,8 +14,6 @@ const LoginScreen = ({ navigation }: any) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-
-
 
     const handleLogin = async () => {
         const trimmedEmail = email.trim().toLowerCase();
@@ -40,9 +38,9 @@ const LoginScreen = ({ navigation }: any) => {
 
                 let errorMessage = error.message;
                 if (error.message === 'Invalid login credentials') {
-                    errorMessage = 'Email atau password salah. Pastikan akun sudah terdaftar dan email sudah dikonfirmasi.';
+                    errorMessage = 'Email atau password salah. Pastikan email dan password yang dimasukkan sudah benar.';
                 } else if (error.message === 'Email not confirmed') {
-                    errorMessage = 'Email belum dikonfirmasi. Silakan cek inbox email Anda untuk link konfirmasi.';
+                    errorMessage = 'Email belum dikonfirmasi. Silakan cek inbox email Anda untuk link konfirmasi, lalu coba login kembali.';
                 }
 
                 Alert.alert('Login Gagal', errorMessage);
@@ -75,8 +73,6 @@ const LoginScreen = ({ navigation }: any) => {
                         <Ionicons name="arrow-back" size={24} color="#374151" />
                     </TouchableOpacity>
 
-
-
                     {/* Header / Logo Section */}
                     <View className="items-center mb-12">
                         <View className="w-28 h-28 bg-white rounded-[32px] items-center justify-center mb-6 shadow-xl shadow-indigo-500/10 border border-gray-100 transform -rotate-2">
@@ -106,7 +102,7 @@ const LoginScreen = ({ navigation }: any) => {
                             </View>
                         </View>
 
-                        <View className="mb-8">
+                        <View className="mb-4">
                             <Text className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1">Password</Text>
                             <View className="bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3.5 flex-row items-center">
                                 <Ionicons name="lock-closed-outline" size={20} color="#9CA3AF" />
@@ -120,6 +116,14 @@ const LoginScreen = ({ navigation }: any) => {
                                 />
                             </View>
                         </View>
+
+                        {/* Forgot Password Link */}
+                        <TouchableOpacity
+                            onPress={() => navigation.navigate('ForgotPassword')}
+                            className="self-end mb-6"
+                        >
+                            <Text className="text-primary font-bold text-sm">Lupa Password?</Text>
+                        </TouchableOpacity>
 
                         <TouchableOpacity
                             onPress={handleLogin}
