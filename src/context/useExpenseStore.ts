@@ -133,18 +133,26 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
     },
 
     addExpense: async (expense) => {
-        const { user } = get();
-        if (!user) return;
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (!authUser) {
+            alert('Sesi login telah berakhir. Silakan login ulang.');
+            return;
+        }
 
-        const { data, error } = await supabase.from('expenses').insert({
-            user_id: user.id,
+        const payload: any = {
+            user_id: authUser.id,
             amount: expense.amount,
             note: expense.note,
             date: expense.date,
             type: expense.type,
-            wallet_id: expense.wallet.id,
-            category_id: expense.category?.id || null
-        }).select().single();
+            wallet_id: expense.wallet.id
+        };
+
+        if (expense.category?.id) {
+            payload.category_id = expense.category.id;
+        }
+
+        const { data, error } = await supabase.from('expenses').insert(payload).select().single();
 
         if (error) {
             console.error('Error adding expense:', error);
@@ -191,11 +199,17 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
     },
 
     addWallet: async (newWallet) => {
-        const { user } = get();
-        if (!user) return undefined;
+        // Always get the REAL auth user from Supabase to ensure auth.uid() matches
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (!authUser) {
+            alert('Sesi login telah berakhir. Silakan login ulang.');
+            return undefined;
+        }
+
+        console.log('DEBUG addWallet - auth.uid():', authUser.id);
 
         const { data, error } = await supabase.from('wallets').insert({
-            user_id: user.id,
+            user_id: authUser.id,
             name: newWallet.name,
             icon: newWallet.icon,
             type: newWallet.type
@@ -212,11 +226,14 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
     },
 
     addCategory: async (newCategory) => {
-        const { user } = get();
-        if (!user) return undefined;
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (!authUser) {
+            alert('Sesi login telah berakhir. Silakan login ulang.');
+            return undefined;
+        }
 
         const { data, error } = await supabase.from('categories').insert({
-            user_id: user.id,
+            user_id: authUser.id,
             name: newCategory.name,
             icon: newCategory.icon,
             type: newCategory.type

@@ -12,7 +12,7 @@ create extension if not exists "uuid-ossp";
 
 -- 2. Create Profiles Table (Public User Data)
 create table public.profiles (
-  id uuid references auth.users not null primary key,
+  id uuid references auth.users on delete cascade not null primary key,
   full_name text,
   avatar_url text,
   email text,
@@ -22,7 +22,7 @@ create table public.profiles (
 -- 3. Create Wallets Table
 create table public.wallets (
   id uuid default uuid_generate_v4() primary key,
-  user_id uuid references public.profiles(id) not null,
+  user_id uuid references public.profiles(id) on delete cascade not null,
   name text not null,
   icon text default 'wallet',
   type text default 'wallet',
@@ -32,7 +32,7 @@ create table public.wallets (
 -- 4. Create Categories Table
 create table public.categories (
   id uuid default uuid_generate_v4() primary key,
-  user_id uuid references public.profiles(id) not null, -- Every user has their own categories
+  user_id uuid references public.profiles(id) on delete cascade not null, -- Every user has their own categories
   name text not null,
   icon text default 'pricetag',
   type text check (type in ('income', 'expense')) not null,
@@ -42,7 +42,7 @@ create table public.categories (
 -- 5. Create Expenses Table
 create table public.expenses (
   id uuid default uuid_generate_v4() primary key,
-  user_id uuid references public.profiles(id) not null,
+  user_id uuid references public.profiles(id) on delete cascade not null,
   wallet_id uuid references public.wallets(id) on delete cascade not null,
   category_id uuid references public.categories(id) on delete set null, -- Keep expense even if cat is deleted? Use set null or cascade.
   amount numeric not null,

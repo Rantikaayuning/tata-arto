@@ -18,30 +18,46 @@ const LoginScreen = ({ navigation }: any) => {
 
 
     const handleLogin = async () => {
-        if (!email || !password) {
-            Alert.alert('Error', 'Please fill in all fields');
+        const trimmedEmail = email.trim().toLowerCase();
+        const trimmedPassword = password.trim();
+
+        if (!trimmedEmail || !trimmedPassword) {
+            Alert.alert('Error', 'Mohon isi semua field');
             return;
         }
 
         setIsLoading(true);
-        const { data, error } = await supabase.auth.signInWithPassword({
-            email: email,
-            password: password,
-        });
-
-        setIsLoading(false);
-
-        if (error) {
-            Alert.alert('Login Failed', error.message);
-        } else if (data.user) {
-            // Fetch profile to get name/avatar if needed, but store fetchData handles it.
-            // Just pass basic info to trigger store's login logic which will fetch data.
-            login({
-                id: data.user.id,
-                name: 'Loading...', // Store will update this
-                email: data.user.email || '',
+        try {
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: trimmedEmail,
+                password: trimmedPassword,
             });
-            navigation.goBack();
+
+            setIsLoading(false);
+
+            if (error) {
+                console.log('Login error:', error.message, error.status);
+
+                let errorMessage = error.message;
+                if (error.message === 'Invalid login credentials') {
+                    errorMessage = 'Email atau password salah. Pastikan akun sudah terdaftar dan email sudah dikonfirmasi.';
+                } else if (error.message === 'Email not confirmed') {
+                    errorMessage = 'Email belum dikonfirmasi. Silakan cek inbox email Anda untuk link konfirmasi.';
+                }
+
+                Alert.alert('Login Gagal', errorMessage);
+            } else if (data.user) {
+                login({
+                    id: data.user.id,
+                    name: 'Loading...',
+                    email: data.user.email || '',
+                });
+                navigation.goBack();
+            }
+        } catch (e: any) {
+            setIsLoading(false);
+            console.log('Login exception:', e);
+            Alert.alert('Error', 'Terjadi kesalahan koneksi. Silakan coba lagi.');
         }
     };
 

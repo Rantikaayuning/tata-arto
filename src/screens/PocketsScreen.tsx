@@ -76,25 +76,14 @@ const PocketsScreen = () => {
 
         const amount = parseNumberFromDots(initialAmount);
         if (amount > 0) {
-            let incomeCategory = categories.find(c => c.type === 'income');
-            if (!incomeCategory) {
-                incomeCategory = await addCategory({
-                    name: 'Saldo Awal',
-                    icon: 'cash',
-                    type: 'income'
-                });
-            }
-
-            if (incomeCategory) {
-                await addExpense({
-                    amount: amount,
-                    wallet: createdWallet,
-                    category: incomeCategory,
-                    note: 'Saldo Awal Dompet',
-                    date: new Date().toISOString(),
-                    type: 'income'
-                });
-            }
+            await addExpense({
+                amount: amount,
+                wallet: createdWallet,
+                category: undefined,
+                note: 'Saldo Awal Dompet',
+                date: new Date().toISOString(),
+                type: 'income'
+            });
         }
 
         setNewWalletName('');
