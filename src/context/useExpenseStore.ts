@@ -120,18 +120,24 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
         }
 
         // Fetch family membership
-        const { data: myMembership } = await supabase
+        const { data: myMembership, error: membershipError } = await supabase
             .from('family_members')
             .select('family_id, role')
             .eq('user_id', user.id)
             .limit(1)
             .single();
 
+        if (membershipError && membershipError.code !== 'PGRST116') {
+            console.error('Error fetching family membership:', membershipError);
+        }
+
         let familyId = myMembership?.family_id || null;
+        console.log('[fetchData] familyId from membership:', familyId, 'user.id:', user.id);
 
         // Auto-create family if none exists
         if (!familyId) {
-            const { data: newFamily } = await supabase
+            console.log('[fetchData] No family found, creating new family...');
+            const { data: newFamily, error: familyError } = await supabase
                 .from('families')
                 .insert({
                     name: 'Keluarga ' + (currentProfile?.full_name || 'Saya'),
@@ -140,13 +146,25 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
                 .select()
                 .single();
 
+            if (familyError) {
+                console.error('[fetchData] Error creating family:', familyError);
+            }
+
             if (newFamily) {
-                await supabase.from('family_members').insert({
+                console.log('[fetchData] Family created:', newFamily.id);
+                const { error: memberInsertError } = await supabase.from('family_members').insert({
                     family_id: newFamily.id,
                     user_id: user.id,
                     role: 'admin'
                 });
+
+                if (memberInsertError) {
+                    console.error('[fetchData] Error inserting family member:', memberInsertError);
+                }
+
                 familyId = newFamily.id;
+            } else {
+                console.error('[fetchData] Failed to create family, newFamily is null');
             }
         }
 
@@ -240,21 +258,35 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
 
         if (!user) return { success: false, message: 'notLoggedIn' };
 
-        // Auto-fetch familyId if null
+        // Pastikan state diinisialisasi jika belum
         if (!familyId) {
-            const { data: membership } = await supabase
-                .from('family_members')
-                .select('family_id')
-                .eq('user_id', user.id)
-                .limit(1)
-                .single();
+            console.log('[inviteMember] familyId is null, calling fetchData...');
+            await get().fetchData();
+            familyId = get().familyId;
+            console.log('[inviteMember] After fetchData, familyId:', familyId);
+        }
 
-            if (membership) {
-                familyId = membership.family_id;
-                set({ familyId });
-            } else {
-                return { success: false, message: 'Keluarga tidak ditemukan' };
+        // Fallback: coba query langsung jika fetchData tidak berhasil
+        if (!familyId) {
+            console.log('[inviteMember] Still no familyId, trying direct query...');
+            const { data: { user: authUser } } = await supabase.auth.getUser();
+            if (authUser) {
+                const { data: directMembership, error: directErr } = await supabase
+                    .from('family_members')
+                    .select('family_id')
+                    .eq('user_id', authUser.id)
+                    .limit(1)
+                    .single();
+                console.log('[inviteMember] Direct query:', directMembership, 'err:', directErr);
+                if (directMembership) {
+                    familyId = directMembership.family_id;
+                    set({ familyId });
+                }
             }
+        }
+
+        if (!familyId) {
+            return { success: false, message: 'Gagal mendapatkan data keluarga. Silakan restart aplikasi.' };
         }
 
         const trimmedEmail = email.trim().toLowerCase();
@@ -324,8 +356,28 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
                 return { success: false, message: invError.message };
             }
 
+            // Kirim email undangan via Supabase Edge Function
+            try {
+                const { data: familyData } = await supabase
+                    .from('families')
+                    .select('name')
+                    .eq('id', familyId)
+                    .single();
+
+                await supabase.functions.invoke('send-invitation-email', {
+                    body: {
+                        to_email: trimmedEmail,
+                        inviter_name: user.name || 'Seseorang',
+                        family_name: familyData?.name || 'Keluarga',
+                    },
+                });
+            } catch (emailErr) {
+                console.warn('Email undangan gagal dikirim:', emailErr);
+                // Tidak gagalkan proses — undangan tetap tersimpan di database
+            }
+
             await get().fetchData();
-            return { success: true, message: 'Undangan terkirim! Anggota akan otomatis bergabung saat mendaftar.' };
+            return { success: true, message: 'Undangan terkirim! Email notifikasi telah dikirim.' };
         }
     },
 

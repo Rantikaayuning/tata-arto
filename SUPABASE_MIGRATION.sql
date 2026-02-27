@@ -3,26 +3,7 @@
 -- Run this in Supabase Dashboard > SQL Editor
 -- ==========================================
 
--- 1. Helper Functions (SECURITY DEFINER bypasses RLS to avoid recursion)
-CREATE OR REPLACE FUNCTION public.get_user_family_ids()
-RETURNS SETOF uuid AS $$
-  SELECT family_id FROM public.family_members WHERE user_id = auth.uid()
-$$ LANGUAGE sql SECURITY DEFINER STABLE;
-
-CREATE OR REPLACE FUNCTION public.get_admin_family_ids()
-RETURNS SETOF uuid AS $$
-  SELECT family_id FROM public.family_members WHERE user_id = auth.uid() AND role = 'admin'
-$$ LANGUAGE sql SECURITY DEFINER STABLE;
-
-CREATE OR REPLACE FUNCTION public.get_family_user_ids()
-RETURNS SETOF uuid AS $$
-  SELECT fm.user_id FROM public.family_members fm
-  WHERE fm.family_id IN (
-    SELECT fm2.family_id FROM public.family_members fm2 WHERE fm2.user_id = auth.uid()
-  )
-$$ LANGUAGE sql SECURITY DEFINER STABLE;
-
--- 2. New Tables
+-- 1. Create Tables FIRST
 CREATE TABLE IF NOT EXISTS public.families (
   id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
   name text NOT NULL DEFAULT 'Keluarga Saya',
@@ -48,6 +29,25 @@ CREATE TABLE IF NOT EXISTS public.family_invitations (
   created_at timestamptz DEFAULT timezone('utc'::text, now()),
   UNIQUE(family_id, invited_email)
 );
+
+-- 2. Helper Functions (SECURITY DEFINER bypasses RLS to avoid recursion)
+CREATE OR REPLACE FUNCTION public.get_user_family_ids()
+RETURNS SETOF uuid AS $$
+  SELECT family_id FROM public.family_members WHERE user_id = auth.uid()
+$$ LANGUAGE sql SECURITY DEFINER STABLE;
+
+CREATE OR REPLACE FUNCTION public.get_admin_family_ids()
+RETURNS SETOF uuid AS $$
+  SELECT family_id FROM public.family_members WHERE user_id = auth.uid() AND role = 'admin'
+$$ LANGUAGE sql SECURITY DEFINER STABLE;
+
+CREATE OR REPLACE FUNCTION public.get_family_user_ids()
+RETURNS SETOF uuid AS $$
+  SELECT fm.user_id FROM public.family_members fm
+  WHERE fm.family_id IN (
+    SELECT fm2.family_id FROM public.family_members fm2 WHERE fm2.user_id = auth.uid()
+  )
+$$ LANGUAGE sql SECURITY DEFINER STABLE;
 
 -- 3. Enable RLS
 ALTER TABLE public.families ENABLE ROW LEVEL SECURITY;
