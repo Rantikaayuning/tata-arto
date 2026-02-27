@@ -9,11 +9,13 @@ import { Logo } from '../components/Logo';
 const { width } = Dimensions.get('window');
 
 const RegisterScreen = ({ navigation }: any) => {
+
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isRegistered, setIsRegistered] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     const handleRegister = async () => {
         const trimmedName = name.trim();
@@ -186,8 +188,15 @@ const RegisterScreen = ({ navigation }: any) => {
                                     placeholderTextColor="#D1D5DB"
                                     value={password}
                                     onChangeText={setPassword}
-                                    secureTextEntry
+                                    secureTextEntry={!showPassword}
                                 />
+                                <TouchableOpacity onPress={() => setShowPassword(!showPassword)} className="p-1">
+                                    <Ionicons
+                                        name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                                        size={22}
+                                        color="#9CA3AF"
+                                    />
+                                </TouchableOpacity>
                             </View>
                         </View>
 

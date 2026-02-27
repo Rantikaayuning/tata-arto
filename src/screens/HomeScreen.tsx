@@ -307,7 +307,6 @@ const HomeScreen = ({ navigation }: any) => {
                             <View className="items-center justify-center mt-20">
                                 <Ionicons name="clipboard-outline" size={60} color="#D1D5DB" />
                                 <Text className="text-gray-400 text-lg mt-4">Belum ada transaksi</Text>
-                                <Text className="text-gray-400 text-sm">di bulan ini</Text>
                             </View>
                         }
                     />

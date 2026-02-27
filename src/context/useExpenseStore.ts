@@ -234,26 +234,45 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
     },
 
     inviteMember: async (email: string) => {
-        const { user, familyId } = get();
-        if (!user || !familyId) return { success: false, message: 'Anda belum login.' };
+        const { user } = get();
+        let familyId = get().familyId;
+
+        if (!user) return { success: false, message: 'notLoggedIn' };
+
+        // Auto-fetch familyId if null
+        if (!familyId) {
+            const { data: membership } = await supabase
+                .from('family_members')
+                .select('family_id')
+                .eq('user_id', user.id)
+                .limit(1)
+                .single();
+
+            if (membership) {
+                familyId = membership.family_id;
+                set({ familyId });
+            } else {
+                return { success: false, message: 'Keluarga tidak ditemukan' };
+            }
+        }
 
         const trimmedEmail = email.trim().toLowerCase();
 
         // Don't invite yourself
         if (trimmedEmail === user.email) {
-            return { success: false, message: 'Anda tidak bisa mengundang diri sendiri.' };
+            return { success: false, message: 'Tidak bisa mengundang diri sendiri' };
         }
 
         // Check if email is already a member
         const existingMembers = get().members;
         if (existingMembers.some(m => m.email === trimmedEmail)) {
-            return { success: false, message: 'Email ini sudah menjadi anggota keluarga.' };
+            return { success: false, message: 'Email ini sudah menjadi anggota keluarga' };
         }
 
         // Check if invitation already pending
         const existingInvitations = get().pendingInvitations;
         if (existingInvitations.some(i => i.invited_email === trimmedEmail)) {
-            return { success: false, message: 'Undangan sudah dikirim untuk email ini.' };
+            return { success: false, message: 'Undangan sudah dikirim sebelumnya' };
         }
 
         // Check if user already exists in profiles
@@ -273,7 +292,7 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
 
             if (memberError) {
                 if (memberError.code === '23505') {
-                    return { success: false, message: 'User sudah menjadi anggota keluarga.' };
+                    return { success: false, message: 'Anggota sudah terdaftar dalam keluarga ini' };
                 }
                 return { success: false, message: memberError.message };
             }
@@ -287,7 +306,7 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
             });
 
             await get().fetchData();
-            return { success: true, message: `${existingProfile.full_name || trimmedEmail} berhasil ditambahkan ke keluarga!` };
+            return { success: true, message: `${existingProfile.full_name || trimmedEmail} berhasil ditambahkan ke keluarga` };
         } else {
             // User doesn't exist - create pending invitation
             const { error: invError } = await supabase.from('family_invitations').insert({
@@ -299,13 +318,13 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
 
             if (invError) {
                 if (invError.code === '23505') {
-                    return { success: false, message: 'Undangan sudah dikirim untuk email ini.' };
+                    return { success: false, message: 'Undangan sudah pernah dikirim ke email ini' };
                 }
                 return { success: false, message: invError.message };
             }
 
             await get().fetchData();
-            return { success: true, message: `Undangan terkirim ke ${trimmedEmail}. User perlu mendaftar terlebih dahulu.` };
+            return { success: true, message: 'Undangan terkirim! Anggota akan otomatis bergabung saat mendaftar.' };
         }
     },
 

@@ -195,23 +195,29 @@ const PocketsScreen = () => {
 
                         <ScrollView showsVerticalScrollIndicator={false}>
                             <Text className="text-gray-500 font-bold text-xs uppercase tracking-wider mb-3">Nama Dompet</Text>
-                            <TextInput
-                                className="bg-gray-50 p-5 rounded-2xl border-0 mb-6 text-gray-900 font-bold text-lg"
-                                placeholder="Contoh: Tabungan"
-                                placeholderTextColor="#9CA3AF"
-                                value={newWalletName}
-                                onChangeText={setNewWalletName}
-                            />
+                            <View className="bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3.5 flex-row items-center mb-6">
+                                <Ionicons name="wallet-outline" size={20} color="#9CA3AF" />
+                                <TextInput
+                                    className="flex-1 ml-3 font-medium text-gray-800"
+                                    placeholder="Contoh: Tabungan"
+                                    placeholderTextColor="#D1D5DB"
+                                    value={newWalletName}
+                                    onChangeText={setNewWalletName}
+                                />
+                            </View>
 
                             <Text className="text-gray-500 font-bold text-xs uppercase tracking-wider mb-3">Saldo Awal</Text>
-                            <TextInput
-                                className="bg-gray-50 p-5 rounded-2xl border-0 mb-6 text-gray-900 font-bold text-lg"
-                                placeholder="Rp 0"
-                                placeholderTextColor="#9CA3AF"
-                                keyboardType="numeric"
-                                value={initialAmount}
-                                onChangeText={handleAmountChange}
-                            />
+                            <View className="bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3.5 flex-row items-center mb-6">
+                                <Ionicons name="cash-outline" size={20} color="#9CA3AF" />
+                                <TextInput
+                                    className="flex-1 ml-3 font-medium text-gray-800"
+                                    placeholder="Rp 0"
+                                    placeholderTextColor="#D1D5DB"
+                                    keyboardType="numeric"
+                                    value={initialAmount}
+                                    onChangeText={handleAmountChange}
+                                />
+                            </View>
 
                             <Text className="text-gray-500 font-bold text-xs uppercase tracking-wider mb-3">Pilih Ikon</Text>
                             <View className="flex-row flex-wrap mb-8 gap-3">

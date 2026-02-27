@@ -14,6 +14,7 @@ const LoginScreen = ({ navigation }: any) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     const handleLogin = async () => {
         const trimmedEmail = email.trim().toLowerCase();
@@ -34,15 +35,12 @@ const LoginScreen = ({ navigation }: any) => {
             setIsLoading(false);
 
             if (error) {
-                console.log('Login error:', error.message, error.status);
-
                 let errorMessage = error.message;
                 if (error.message === 'Invalid login credentials') {
                     errorMessage = 'Email atau password salah. Pastikan email dan password yang dimasukkan sudah benar.';
                 } else if (error.message === 'Email not confirmed') {
                     errorMessage = 'Email belum dikonfirmasi. Silakan cek inbox email Anda untuk link konfirmasi, lalu coba login kembali.';
                 }
-
                 Alert.alert('Login Gagal', errorMessage);
             } else if (data.user) {
                 login({
@@ -50,11 +48,13 @@ const LoginScreen = ({ navigation }: any) => {
                     name: 'Loading...',
                     email: data.user.email || '',
                 });
-                navigation.goBack();
+                navigation.reset({
+                    index: 0,
+                    routes: [{ name: 'MainTabs' }],
+                });
             }
         } catch (e: any) {
             setIsLoading(false);
-            console.log('Login exception:', e);
             Alert.alert('Error', 'Terjadi kesalahan koneksi. Silakan coba lagi.');
         }
     };
@@ -73,7 +73,6 @@ const LoginScreen = ({ navigation }: any) => {
                         <Ionicons name="arrow-back" size={24} color="#374151" />
                     </TouchableOpacity>
 
-                    {/* Header / Logo Section */}
                     <View className="items-center mb-12">
                         <View className="w-28 h-28 bg-white rounded-[32px] items-center justify-center mb-6 shadow-xl shadow-indigo-500/10 border border-gray-100 transform -rotate-2">
                             <Logo width={72} height={72} />
@@ -82,7 +81,6 @@ const LoginScreen = ({ navigation }: any) => {
                         <Text className="text-gray-400 font-medium tracking-wide">Kelola Keuangan Bersama</Text>
                     </View>
 
-                    {/* Form Section */}
                     <View className="bg-white p-8 rounded-[40px] shadow-sm border border-gray-100">
                         <Text className="text-xl font-bold text-gray-800 mb-6">Masuk Akun</Text>
 
@@ -112,12 +110,18 @@ const LoginScreen = ({ navigation }: any) => {
                                     placeholderTextColor="#D1D5DB"
                                     value={password}
                                     onChangeText={setPassword}
-                                    secureTextEntry
+                                    secureTextEntry={!showPassword}
                                 />
+                                <TouchableOpacity onPress={() => setShowPassword(!showPassword)} className="p-1">
+                                    <Ionicons
+                                        name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                                        size={22}
+                                        color="#9CA3AF"
+                                    />
+                                </TouchableOpacity>
                             </View>
                         </View>
 
-                        {/* Forgot Password Link */}
                         <TouchableOpacity
                             onPress={() => navigation.navigate('ForgotPassword')}
                             className="self-end mb-6"
@@ -130,11 +134,9 @@ const LoginScreen = ({ navigation }: any) => {
                             disabled={isLoading}
                             className="bg-primary py-4 rounded-2xl items-center shadow-lg shadow-indigo-900/20 active:scale-[0.98]"
                         >
-                            {isLoading ? (
-                                <Text className="text-white font-bold text-lg">Memproses...</Text>
-                            ) : (
-                                <Text className="text-white font-bold text-lg">Masuk</Text>
-                            )}
+                            <Text className="text-white font-bold text-lg">
+                                {isLoading ? 'Memproses...' : 'Masuk'}
+                            </Text>
                         </TouchableOpacity>
 
                         <View className="flex-row justify-center mt-6">

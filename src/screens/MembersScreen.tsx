@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Modal, TextInput, Alert, SectionList } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, Modal, TextInput, Alert, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import useExpenseStore from '../context/useExpenseStore';
@@ -21,7 +21,7 @@ const MembersScreen = ({ navigation }: any) => {
 
     const handleInvite = async () => {
         if (!inviteEmail.trim()) {
-            Alert.alert('Error', 'Mohon masukkan email');
+            Alert.alert('Error', 'Mohon isi semua field');
             return;
         }
 
@@ -30,11 +30,11 @@ const MembersScreen = ({ navigation }: any) => {
         setIsInviting(false);
 
         if (result.success) {
-            Alert.alert('Berhasil', result.message);
+            Alert.alert('✅', result.message);
             setInviteEmail('');
             setModalVisible(false);
         } else {
-            Alert.alert('Gagal', result.message);
+            Alert.alert('Error', result.message);
         }
     };
 
@@ -60,9 +60,9 @@ const MembersScreen = ({ navigation }: any) => {
             'Batalkan Undangan',
             `Batalkan undangan untuk ${invitation.invited_email}?`,
             [
-                { text: 'Tidak', style: 'cancel' },
+                { text: 'Batal', style: 'cancel' },
                 {
-                    text: 'Batalkan',
+                    text: 'Hapus',
                     style: 'destructive',
                     onPress: () => cancelInvitation(invitation.id)
                 }
@@ -72,13 +72,13 @@ const MembersScreen = ({ navigation }: any) => {
 
     const handleLogout = () => {
         Alert.alert(
-            "Logout",
-            "Apakah Anda yakin ingin keluar?",
+            'Keluar',
+            'Apakah Anda yakin ingin keluar?',
             [
-                { text: "Batal", style: "cancel" },
+                { text: 'Batal', style: 'cancel' },
                 {
-                    text: "Keluar",
-                    style: "destructive",
+                    text: 'Keluar',
+                    style: 'destructive',
                     onPress: async () => {
                         await logout();
                         navigation.reset({
@@ -153,16 +153,16 @@ const MembersScreen = ({ navigation }: any) => {
                     </TouchableOpacity>
                     <View>
                         <Text className="text-xl font-extrabold text-primary tracking-tighter">Anggota Keluarga</Text>
-                        <Text className="text-xs text-gray-500 font-medium">Kelola akses dan pemantauan</Text>
+                        <Text className="text-xs text-gray-500 font-medium">Kelola akses keluarga</Text>
                     </View>
                 </View>
             </View>
 
-            <View className="flex-1 px-6 pt-6">
+            <ScrollView className="flex-1 px-6 pt-6" showsVerticalScrollIndicator={false}>
                 {/* Current User Card */}
                 {currentUser && (
                     <View className="mb-6">
-                        <Text className="text-gray-400 font-bold text-xs uppercase tracking-widest mb-3 pl-1">Login Sebagai</Text>
+                        <Text className="text-gray-400 font-bold text-xs uppercase tracking-widest mb-3 pl-1">Masuk Sebagai</Text>
                         <View className="bg-primary p-5 rounded-[24px] shadow-lg shadow-indigo-500/30 flex-row items-center justify-between">
                             <View className="flex-row items-center flex-1">
                                 <View className="w-14 h-14 bg-white/20 rounded-full items-center justify-center border border-white/10 mr-4">
@@ -186,13 +186,13 @@ const MembersScreen = ({ navigation }: any) => {
                 <View className="mb-4 bg-indigo-50 p-4 rounded-2xl border border-indigo-100 flex-row items-start">
                     <Ionicons name="information-circle" size={20} color="#343B71" style={{ marginTop: 2 }} />
                     <Text className="ml-3 text-indigo-900 leading-5 flex-1 text-sm">
-                        Anggota keluarga dapat melihat catatan keuangan bersama. Undang anggota dengan email mereka.
+                        Anggota keluarga dapat melihat dan mengelola data keuangan bersama. Hanya pemilik yang dapat mengundang atau menghapus anggota.
                     </Text>
                 </View>
 
                 {/* Members List */}
                 <Text className="text-gray-400 font-bold text-xs uppercase tracking-widest mb-3 pl-1">
-                    Anggota ({members.length})
+                    Daftar Anggota ({members.length})
                 </Text>
                 <FlatList
                     data={members}
@@ -216,8 +216,8 @@ const MembersScreen = ({ navigation }: any) => {
                     </View>
                 )}
 
-                <View style={{ height: 100 }} />
-            </View>
+                <View style={{ height: 120 }} />
+            </ScrollView>
 
             {/* Invite Button (Admin only) */}
             {isAdmin && (
@@ -249,18 +249,22 @@ const MembersScreen = ({ navigation }: any) => {
                         </View>
 
                         <Text className="text-gray-400 text-sm mb-6 leading-5">
-                            Masukkan email anggota keluarga. Jika sudah terdaftar, akan langsung ditambahkan. Jika belum, undangan akan menunggu sampai mereka mendaftar.
+                            Masukkan email anggota keluarga yang ingin diundang untuk bergabung.
                         </Text>
 
                         <Text className="text-gray-500 font-bold text-xs uppercase tracking-wider mb-2">Email</Text>
-                        <TextInput
-                            className="bg-gray-50 p-4 rounded-xl border border-gray-200 mb-8 font-bold text-gray-800"
-                            placeholder="alamat@email.com"
-                            keyboardType="email-address"
-                            autoCapitalize="none"
-                            value={inviteEmail}
-                            onChangeText={setInviteEmail}
-                        />
+                        <View className="bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3.5 flex-row items-center mb-8">
+                            <Ionicons name="mail-outline" size={20} color="#9CA3AF" />
+                            <TextInput
+                                className="flex-1 ml-3 font-medium text-gray-800"
+                                placeholder="alamat@email.com"
+                                placeholderTextColor="#D1D5DB"
+                                keyboardType="email-address"
+                                autoCapitalize="none"
+                                value={inviteEmail}
+                                onChangeText={setInviteEmail}
+                            />
+                        </View>
 
                         <TouchableOpacity
                             onPress={handleInvite}
