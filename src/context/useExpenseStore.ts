@@ -338,6 +338,26 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
                 status: 'accepted'
             });
 
+            // Kirim email notifikasi ke user yang sudah terdaftar
+            try {
+                const { data: familyData } = await supabase
+                    .from('families')
+                    .select('name')
+                    .eq('id', familyId)
+                    .single();
+
+                await supabase.functions.invoke('send-invitation-email', {
+                    body: {
+                        to_email: trimmedEmail,
+                        inviter_name: user.name || 'Seseorang',
+                        family_name: familyData?.name || 'Keluarga',
+                        is_existing_user: true,
+                    },
+                });
+            } catch (emailErr) {
+                console.warn('Email notifikasi gagal dikirim:', emailErr);
+            }
+
             await get().fetchData();
             return { success: true, message: `${existingProfile.full_name || trimmedEmail} berhasil ditambahkan ke keluarga` };
         } else {

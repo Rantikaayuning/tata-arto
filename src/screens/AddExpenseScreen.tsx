@@ -152,7 +152,7 @@ const AddExpenseScreen = ({ navigation, route }: any) => {
             />
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
-                className="w-full max-h-[85%]"
+                className="w-full max-h-[92%]"
             >
                 <View className="bg-white rounded-3xl overflow-hidden shadow-2xl w-full android:elevation-10">
                     {/* Header */}
@@ -167,31 +167,34 @@ const AddExpenseScreen = ({ navigation, route }: any) => {
 
                     <ScrollView className="p-6" keyboardShouldPersistTaps="handled">
                         {/* 1. Main Input Area: Amount & Date */}
-                        <View className="flex-row items-start mb-6 w-full">
+                        <View className="flex-row items-end mb-6 w-full">
                             {/* Amount Input */}
                             <View className="flex-1 mr-3">
                                 <Text className="text-gray-400 text-xs font-bold mb-1.5 uppercase tracking-wider">Nominal</Text>
-                                <TextInput
-                                    className="w-full bg-gray-50 p-4 min-h-[64px] rounded-2xl text-2xl font-bold border border-gray-200 focus:border-primary text-primary"
-                                    placeholder="0"
-                                    keyboardType="numeric"
-                                    value={amount}
-                                    onChangeText={handleAmountChange}
-                                    autoFocus={true}
-                                />
+                                <View className="bg-gray-50 border border-gray-200 rounded-2xl px-4 h-[50px] flex-row items-center">
+                                    <Ionicons name="cash-outline" size={20} color="#9CA3AF" />
+                                    <TextInput
+                                        className="flex-1 ml-3 text-xl font-bold text-primary"
+                                        placeholder="0"
+                                        placeholderTextColor="#D1D5DB"
+                                        keyboardType="numeric"
+                                        value={amount}
+                                        onChangeText={handleAmountChange}
+                                        autoFocus={true}
+                                    />
+                                </View>
                             </View>
 
-                            {/* Date Button (Compact) */}
+                            {/* Date Button */}
                             <View>
                                 <Text className="text-gray-400 text-xs font-bold mb-1.5 uppercase tracking-wider">Tanggal</Text>
                                 <TouchableOpacity
-                                    className="bg-gray-50 p-3 rounded-2xl border border-gray-200 items-center justify-center min-h-[64px] min-w-[64px]"
+                                    className="bg-gray-50 border border-gray-200 rounded-2xl px-4 h-[50px] flex-row items-center"
                                     onPress={() => setShowDatePicker(true)}
                                 >
-                                    <View className="items-center">
-                                        <Text className="text-sm font-bold text-gray-800">{date.getDate()}</Text>
-                                        <Text className="text-[11px] text-gray-500">{date.toLocaleString('default', { month: 'short' })}</Text>
-                                    </View>
+                                    <Ionicons name="calendar-outline" size={20} color="#9CA3AF" />
+                                    <Text className="ml-2 font-bold text-gray-800">{date.getDate()}</Text>
+                                    <Text className="ml-1 text-xs text-gray-500">{date.toLocaleString('default', { month: 'short' })}</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -202,6 +205,7 @@ const AddExpenseScreen = ({ navigation, route }: any) => {
                                 value={date}
                                 mode="date"
                                 display="default"
+                                maximumDate={new Date()}
                                 onChange={onDateChange}
                             />
                         )}
@@ -230,6 +234,7 @@ const AddExpenseScreen = ({ navigation, route }: any) => {
                                                 value={date}
                                                 mode="date"
                                                 display="inline"
+                                                maximumDate={new Date()}
                                                 onChange={onDateChange}
                                                 themeVariant="light"
                                                 accentColor="#343B71"
@@ -294,12 +299,16 @@ const AddExpenseScreen = ({ navigation, route }: any) => {
                         {/* 4. Note Input */}
                         <View className="mb-8">
                             <Text className="text-gray-400 text-xs font-bold mb-2 uppercase tracking-wider">Catatan</Text>
-                            <TextInput
-                                className="w-full bg-gray-50 p-4 rounded-2xl text-base text-gray-800 border border-gray-200 focus:border-primary"
-                                placeholder="Tulis catatan (opsional)..."
-                                value={note}
-                                onChangeText={setNote}
-                            />
+                            <View className="bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3.5 flex-row items-center">
+                                <Ionicons name="create-outline" size={20} color="#9CA3AF" />
+                                <TextInput
+                                    className="flex-1 ml-3 font-medium text-gray-800"
+                                    placeholder="Tulis catatan (opsional)..."
+                                    placeholderTextColor="#D1D5DB"
+                                    value={note}
+                                    onChangeText={setNote}
+                                />
+                            </View>
                         </View>
 
                         {/* 5. Save Button (Inside ScrollView, validating form) */}

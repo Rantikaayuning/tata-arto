@@ -14,14 +14,12 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    // Buat Supabase admin client menggunakan service_role key
-    // (otomatis tersedia di Edge Functions sebagai env variable)
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const { to_email, inviter_name, family_name } = await req.json();
+    const { to_email, inviter_name, family_name, is_existing_user } = await req.json();
 
     if (!to_email) {
       return new Response(
@@ -30,64 +28,66 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // Gunakan Supabase Auth untuk mengirim undangan
-    // Ini akan mengirim email menggunakan SMTP bawaan Supabase
-    const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(
-      to_email,
-      {
-        data: {
-          invited_by: inviter_name || "Seseorang",
-          family_name: family_name || "Keluarga",
-          full_name: to_email.split("@")[0],
-        },
-        redirectTo: undefined, // Bisa diisi URL deep link aplikasi nanti
-      }
-    );
+    if (is_existing_user) {
+      // User sudah terdaftar — kirim magic link sebagai notifikasi
+      // Magic link akan membawa user langsung masuk ke app
+      const { error } = await supabaseAdmin.auth.admin.generateLink({
+        type: "magiclink",
+        email: to_email,
+      });
 
-    if (error) {
-      console.error("Supabase invite error:", error);
-
-      // Jika user sudah terdaftar, bukan error — artinya sudah punya akun
-      if (error.message?.includes("already been registered") ||
-        error.message?.includes("already exists")) {
+      if (error) {
+        console.error("Magic link error:", error);
+        // Jangan gagalkan — user sudah ditambahkan ke keluarga
         return new Response(
-          JSON.stringify({
-            success: true,
-            already_registered: true,
-            message: "User sudah terdaftar, undangan tersimpan di database"
-          }),
-          {
-            status: 200,
-            headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
-          }
+          JSON.stringify({ success: true, email_sent: false, message: "User ditambahkan tapi email gagal dikirim" }),
+          { status: 200, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
         );
       }
 
       return new Response(
-        JSON.stringify({ error: error.message }),
-        { status: 500, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
+        JSON.stringify({ success: true, email_sent: true, message: "Notifikasi terkirim ke user yang sudah terdaftar" }),
+        { status: 200, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
+      );
+    } else {
+      // User belum terdaftar — kirim undangan signup
+      const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(
+        to_email,
+        {
+          data: {
+            invited_by: inviter_name || "Seseorang",
+            family_name: family_name || "Keluarga",
+            full_name: to_email.split("@")[0],
+          },
+        }
+      );
+
+      if (error) {
+        console.error("Invite error:", error);
+
+        if (error.message?.includes("already") || error.message?.includes("exists")) {
+          return new Response(
+            JSON.stringify({ success: true, already_registered: true }),
+            { status: 200, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
+          );
+        }
+
+        return new Response(
+          JSON.stringify({ error: error.message }),
+          { status: 500, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
+        );
+      }
+
+      return new Response(
+        JSON.stringify({ success: true, message: "Email undangan berhasil dikirim", user_id: data?.user?.id }),
+        { status: 200, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
       );
     }
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: "Email undangan berhasil dikirim",
-        user_id: data?.user?.id
-      }),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
-      }
-    );
   } catch (error) {
     console.error("Error:", error);
     return new Response(
       JSON.stringify({ error: (error as Error).message }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
-      }
+      { status: 500, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
     );
   }
 });
