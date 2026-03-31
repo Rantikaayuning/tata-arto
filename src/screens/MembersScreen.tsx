@@ -1,285 +1,387 @@
-import React, { useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Modal, TextInput, Alert, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import useExpenseStore from '../context/useExpenseStore';
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  Modal,
+  TextInput,
+  Alert,
+  ScrollView,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import useExpenseStore from "../context/useExpenseStore";
 
 const MembersScreen = ({ navigation }: any) => {
-    const members = useExpenseStore((state) => state.members) || [];
-    const pendingInvitations = useExpenseStore((state) => state.pendingInvitations) || [];
-    const inviteMember = useExpenseStore((state) => state.inviteMember);
-    const removeMember = useExpenseStore((state) => state.removeMember);
-    const cancelInvitation = useExpenseStore((state) => state.cancelInvitation);
-    const currentUser = useExpenseStore((state) => state.user);
-    const logout = useExpenseStore((state) => state.logout);
+  const members = useExpenseStore((state) => state.members) || [];
+  const pendingInvitations =
+    useExpenseStore((state) => state.pendingInvitations) || [];
+  const inviteMember = useExpenseStore((state) => state.inviteMember);
+  const removeMember = useExpenseStore((state) => state.removeMember);
+  const cancelInvitation = useExpenseStore((state) => state.cancelInvitation);
+  const currentUser = useExpenseStore((state) => state.user);
+  const logout = useExpenseStore((state) => state.logout);
 
-    const [modalVisible, setModalVisible] = useState(false);
-    const [inviteEmail, setInviteEmail] = useState('');
-    const [isInviting, setIsInviting] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [isInviting, setIsInviting] = useState(false);
 
-    const isAdmin = currentUser?.role === 'admin';
+  const isAdmin = currentUser?.role === "admin";
 
-    const handleInvite = async () => {
-        if (!inviteEmail.trim()) {
-            Alert.alert('Error', 'Mohon isi semua field');
-            return;
-        }
+  const handleInvite = async () => {
+    if (!isAdmin) {
+      Alert.alert(
+        "Akses Ditolak",
+        "Hanya pemilik keluarga yang dapat mengundang anggota baru",
+      );
+      return;
+    }
 
-        setIsInviting(true);
-        const result = await inviteMember(inviteEmail.trim());
-        setIsInviting(false);
+    if (!inviteEmail.trim()) {
+      Alert.alert("Error", "Mohon isi semua field");
+      return;
+    }
 
-        if (result.success) {
-            Alert.alert('✅', result.message);
-            setInviteEmail('');
-            setModalVisible(false);
-        } else {
-            Alert.alert('Error', result.message);
-        }
-    };
+    setIsInviting(true);
+    const result = await inviteMember(inviteEmail.trim());
+    setIsInviting(false);
 
-    const handleRemoveMember = (member: any) => {
-        if (member.id === currentUser?.id) return;
+    if (result.success) {
+      Alert.alert("✅", result.message);
+      setInviteEmail("");
+      setModalVisible(false);
+    } else {
+      Alert.alert("Error", result.message);
+    }
+  };
 
-        Alert.alert(
-            'Hapus Anggota',
-            `Apakah Anda yakin ingin menghapus ${member.name} dari keluarga?`,
-            [
-                { text: 'Batal', style: 'cancel' },
-                {
-                    text: 'Hapus',
-                    style: 'destructive',
-                    onPress: () => removeMember(member.id)
-                }
-            ]
-        );
-    };
+  const handleRemoveMember = (member: any) => {
+    if (!isAdmin) {
+      Alert.alert(
+        "Akses Ditolak",
+        "Hanya pemilik keluarga yang dapat menghapus anggota",
+      );
+      return;
+    }
 
-    const handleCancelInvitation = (invitation: any) => {
-        Alert.alert(
-            'Batalkan Undangan',
-            `Batalkan undangan untuk ${invitation.invited_email}?`,
-            [
-                { text: 'Batal', style: 'cancel' },
-                {
-                    text: 'Hapus',
-                    style: 'destructive',
-                    onPress: () => cancelInvitation(invitation.id)
-                }
-            ]
-        );
-    };
+    if (member.id === currentUser?.id) {
+      Alert.alert("Tidak Bisa", "Anda tidak dapat menghapus diri sendiri");
+      return;
+    }
 
-    const handleLogout = () => {
-        Alert.alert(
-            'Keluar',
-            'Apakah Anda yakin ingin keluar?',
-            [
-                { text: 'Batal', style: 'cancel' },
-                {
-                    text: 'Keluar',
-                    style: 'destructive',
-                    onPress: async () => {
-                        await logout();
-                        navigation.reset({
-                            index: 0,
-                            routes: [{ name: 'MainTabs' }],
-                        });
-                    }
-                }
-            ]
-        );
-    };
-
-    const renderMember = ({ item }: any) => (
-        <View className="flex-row items-center bg-white p-4 mb-3 rounded-3xl border border-gray-100 shadow-sm">
-            <View className={`w-12 h-12 rounded-full items-center justify-center mr-4 ${item.role === 'admin' ? 'bg-primary/10' : 'bg-orange-50'}`}>
-                <Ionicons
-                    name={item.avatar as any || 'person'}
-                    size={20}
-                    color={item.role === 'admin' ? '#343B71' : '#F97316'}
-                />
-            </View>
-            <View className="flex-1">
-                <Text className="font-bold text-gray-800 text-base">
-                    {item.name} {item.id === currentUser?.id ? '(Saya)' : ''}
-                </Text>
-                <Text className="text-gray-400 text-xs">{item.email}</Text>
-            </View>
-            <View className="flex-row items-center">
-                <View className={`px-3 py-1 rounded-full ${item.role === 'admin' ? 'bg-primary' : 'bg-gray-100'}`}>
-                    <Text className={`text-xs font-bold ${item.role === 'admin' ? 'text-white' : 'text-gray-500'}`}>
-                        {item.role === 'admin' ? 'Pemilik' : 'Anggota'}
-                    </Text>
-                </View>
-                {isAdmin && item.id !== currentUser?.id && (
-                    <TouchableOpacity
-                        onPress={() => handleRemoveMember(item)}
-                        className="ml-2 p-2 rounded-full bg-red-50"
-                    >
-                        <Ionicons name="close" size={16} color="#EF4444" />
-                    </TouchableOpacity>
-                )}
-            </View>
-        </View>
+    Alert.alert(
+      "Hapus Anggota",
+      `Apakah Anda yakin ingin menghapus ${member.name} dari keluarga?`,
+      [
+        { text: "Batal", style: "cancel" },
+        {
+          text: "Hapus",
+          style: "destructive",
+          onPress: () => removeMember(member.id),
+        },
+      ],
     );
+  };
 
-    const renderPendingInvitation = ({ item }: any) => (
-        <View className="flex-row items-center bg-amber-50 p-4 mb-3 rounded-3xl border border-amber-100">
-            <View className="w-12 h-12 rounded-full items-center justify-center mr-4 bg-amber-100">
-                <Ionicons name="time-outline" size={20} color="#F59E0B" />
-            </View>
-            <View className="flex-1">
-                <Text className="font-bold text-gray-800 text-base">{item.invited_email}</Text>
-                <Text className="text-amber-600 text-xs font-medium">Menunggu pendaftaran</Text>
-            </View>
-            {isAdmin && (
-                <TouchableOpacity
-                    onPress={() => handleCancelInvitation(item)}
-                    className="p-2 rounded-full bg-amber-100"
-                >
-                    <Ionicons name="close" size={16} color="#F59E0B" />
-                </TouchableOpacity>
-            )}
-        </View>
+  const handleCancelInvitation = (invitation: any) => {
+    if (!isAdmin) {
+      Alert.alert(
+        "Akses Ditolak",
+        "Hanya pemilik keluarga yang dapat membatalkan undangan",
+      );
+      return;
+    }
+
+    Alert.alert(
+      "Batalkan Undangan",
+      `Batalkan undangan untuk ${invitation.invited_email}?`,
+      [
+        { text: "Batal", style: "cancel" },
+        {
+          text: "Hapus",
+          style: "destructive",
+          onPress: () => cancelInvitation(invitation.id),
+        },
+      ],
     );
+  };
+
+  const handleLogout = () => {
+    Alert.alert("Keluar", "Apakah Anda yakin ingin keluar?", [
+      { text: "Batal", style: "cancel" },
+      {
+        text: "Keluar",
+        style: "destructive",
+        onPress: async () => {
+          await logout();
+          navigation.reset({
+            index: 0,
+            routes: [{ name: "MainTabs" }],
+          });
+        },
+      },
+    ]);
+  };
+
+  const getInvitationStatus = (memberEmail: string) => {
+    const invitation = pendingInvitations.find(
+      (inv) => inv.invited_email === memberEmail,
+    );
+    return invitation?.status;
+  };
+
+  const renderMember = ({ item }: any) => {
+    const invitationStatus = getInvitationStatus(item.email);
+    const statusDisplay =
+      invitationStatus === "pending" ? "⏳ Menunggu" : "✅ Bergabung";
+    const statusColor =
+      invitationStatus === "pending"
+        ? "text-amber-600 bg-amber-50"
+        : "text-green-600 bg-green-50";
 
     return (
-        <SafeAreaView className="flex-1 bg-[#F7F8FA]" edges={['top', 'left', 'right']}>
-            <View className="px-6 pt-4 pb-4 bg-white border-b border-gray-100 shadow-sm z-10 flex-row items-center justify-between">
-                <View className="flex-row items-center">
-                    <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4 p-2 -ml-2 rounded-full active:bg-gray-50">
-                        <Ionicons name="arrow-back" size={24} color="#374151" />
-                    </TouchableOpacity>
-                    <View>
-                        <Text className="text-xl font-extrabold text-primary tracking-tighter">Anggota Keluarga</Text>
-                        <Text className="text-xs text-gray-500 font-medium">Kelola akses keluarga</Text>
-                    </View>
+      <View className="flex-row items-center bg-white p-4 mb-3 rounded-3xl border border-gray-100 shadow-sm">
+        <View
+          className={`w-12 h-12 rounded-full items-center justify-center mr-4 ${item.role === "admin" ? "bg-primary/10" : "bg-orange-50"}`}
+        >
+          <Ionicons
+            name={(item.avatar as any) || "person"}
+            size={20}
+            color={item.role === "admin" ? "#343B71" : "#F97316"}
+          />
+        </View>
+        <View className="flex-1">
+          <View className="flex-row items-center gap-2">
+            <Text className="font-bold text-gray-800 text-base">
+              {item.name} {item.id === currentUser?.id ? "(Saya)" : ""}
+            </Text>
+            {invitationStatus && (
+              <View className={`px-2 py-0.5 rounded-full ${statusColor}`}>
+                <Text className="text-xs font-bold">{statusDisplay}</Text>
+              </View>
+            )}
+          </View>
+          <Text className="text-gray-400 text-xs">{item.email}</Text>
+        </View>
+        <View className="flex-row items-center">
+          <View
+            className={`px-3 py-1 rounded-full ${item.role === "admin" ? "bg-primary" : "bg-gray-100"}`}
+          >
+            <Text
+              className={`text-xs font-bold ${item.role === "admin" ? "text-white" : "text-gray-500"}`}
+            >
+              {item.role === "admin" ? "Pemilik" : "Anggota"}
+            </Text>
+          </View>
+          {isAdmin && item.id !== currentUser?.id && (
+            <TouchableOpacity
+              onPress={() => handleRemoveMember(item)}
+              className="ml-2 p-2 rounded-full bg-red-50"
+            >
+              <Ionicons name="close" size={16} color="#EF4444" />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+    );
+  };
+
+  const renderPendingInvitation = ({ item }: any) => (
+    <View className="flex-row items-center bg-amber-50 p-4 mb-3 rounded-3xl border border-amber-100">
+      <View className="w-12 h-12 rounded-full items-center justify-center mr-4 bg-amber-100">
+        <Ionicons name="time-outline" size={20} color="#F59E0B" />
+      </View>
+      <View className="flex-1">
+        <Text className="font-bold text-gray-800 text-base">
+          {item.invited_email}
+        </Text>
+        <Text className="text-amber-600 text-xs font-medium">
+          Menunggu pendaftaran
+        </Text>
+      </View>
+      {isAdmin && (
+        <TouchableOpacity
+          onPress={() => handleCancelInvitation(item)}
+          className="p-2 rounded-full bg-amber-100"
+        >
+          <Ionicons name="close" size={16} color="#F59E0B" />
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+
+  return (
+    <SafeAreaView
+      className="flex-1 bg-[#F7F8FA]"
+      edges={["top", "left", "right"]}
+    >
+      <View className="px-6 pt-4 pb-4 bg-white border-b border-gray-100 shadow-sm z-10 flex-row items-center justify-between">
+        <View className="flex-row items-center">
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            className="mr-4 p-2 -ml-2 rounded-full active:bg-gray-50"
+          >
+            <Ionicons name="arrow-back" size={24} color="#374151" />
+          </TouchableOpacity>
+          <View>
+            <Text className="text-xl font-extrabold text-primary tracking-tighter">
+              Anggota Keluarga
+            </Text>
+            <Text className="text-xs text-gray-500 font-medium">
+              Kelola akses keluarga
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      <ScrollView
+        className="flex-1 px-6 pt-6"
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Current User Card */}
+        {currentUser && (
+          <View className="mb-6">
+            <Text className="text-gray-400 font-bold text-xs uppercase tracking-widest mb-3 pl-1">
+              Masuk Sebagai
+            </Text>
+            <View className="bg-primary p-5 rounded-[24px] shadow-lg shadow-indigo-500/30 flex-row items-center justify-between">
+              <View className="flex-row items-center flex-1">
+                <View className="w-14 h-14 bg-white/20 rounded-full items-center justify-center border border-white/10 mr-4">
+                  <Ionicons name="person" size={24} color="white" />
                 </View>
+                <View className="flex-1">
+                  <Text className="text-white font-bold text-lg">
+                    {currentUser.name}
+                  </Text>
+                  <Text className="text-indigo-200 text-sm">
+                    {currentUser.email}
+                  </Text>
+                </View>
+              </View>
+              <TouchableOpacity
+                onPress={handleLogout}
+                className="bg-rose-500 p-3 rounded-xl ml-2 shadow-sm active:scale-95"
+              >
+                <Ionicons name="log-out-outline" size={24} color="white" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
+        <View className="mb-4 bg-indigo-50 p-4 rounded-2xl border border-indigo-100 flex-row items-start">
+          <Ionicons
+            name="information-circle"
+            size={20}
+            color="#343B71"
+            style={{ marginTop: 2 }}
+          />
+          <Text className="ml-3 text-indigo-900 leading-5 flex-1 text-sm">
+            Anggota keluarga dapat melihat dan mengelola data keuangan bersama.
+            Hanya pemilik yang dapat mengundang atau menghapus anggota.
+          </Text>
+        </View>
+
+        {/* Members List */}
+        <Text className="text-gray-400 font-bold text-xs uppercase tracking-widest mb-3 pl-1">
+          Daftar Anggota ({members.length})
+        </Text>
+        <FlatList
+          data={members}
+          keyExtractor={(item) => item.id}
+          renderItem={renderMember}
+          scrollEnabled={false}
+        />
+
+        {/* Pending Invitations */}
+        {pendingInvitations.length > 0 && (
+          <View className="mt-6">
+            <Text className="text-gray-400 font-bold text-xs uppercase tracking-widest mb-3 pl-1">
+              Undangan Tertunda ({pendingInvitations.length})
+            </Text>
+            <FlatList
+              data={pendingInvitations}
+              keyExtractor={(item) => item.id}
+              renderItem={renderPendingInvitation}
+              scrollEnabled={false}
+            />
+          </View>
+        )}
+
+        <View style={{ height: 120 }} />
+      </ScrollView>
+
+      {/* Invite Button (Admin only) */}
+      {isAdmin && (
+        <View className="absolute bottom-10 right-6 left-6">
+          <TouchableOpacity
+            onPress={() => setModalVisible(true)}
+            className="bg-primary py-4 rounded-2xl flex-row items-center justify-center shadow-lg shadow-indigo-500/30"
+          >
+            <Ionicons name="person-add" size={20} color="white" />
+            <Text className="text-white font-bold text-lg ml-2">
+              Undang Anggota
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Invite Modal */}
+      <Modal
+        transparent={true}
+        visible={modalVisible}
+        animationType="slide"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View className="flex-1 justify-center items-center bg-black/60 px-6">
+          <View className="bg-white rounded-[32px] p-8 w-full shadow-2xl">
+            <View className="flex-row justify-between items-center mb-4">
+              <Text className="text-2xl font-bold text-gray-800">
+                Undang Anggota
+              </Text>
+              <TouchableOpacity
+                onPress={() => setModalVisible(false)}
+                className="p-2 bg-gray-50 rounded-full"
+              >
+                <Ionicons name="close" size={24} color="#374151" />
+              </TouchableOpacity>
             </View>
 
-            <ScrollView className="flex-1 px-6 pt-6" showsVerticalScrollIndicator={false}>
-                {/* Current User Card */}
-                {currentUser && (
-                    <View className="mb-6">
-                        <Text className="text-gray-400 font-bold text-xs uppercase tracking-widest mb-3 pl-1">Masuk Sebagai</Text>
-                        <View className="bg-primary p-5 rounded-[24px] shadow-lg shadow-indigo-500/30 flex-row items-center justify-between">
-                            <View className="flex-row items-center flex-1">
-                                <View className="w-14 h-14 bg-white/20 rounded-full items-center justify-center border border-white/10 mr-4">
-                                    <Ionicons name="person" size={24} color="white" />
-                                </View>
-                                <View className="flex-1">
-                                    <Text className="text-white font-bold text-lg">{currentUser.name}</Text>
-                                    <Text className="text-indigo-200 text-sm">{currentUser.email}</Text>
-                                </View>
-                            </View>
-                            <TouchableOpacity
-                                onPress={handleLogout}
-                                className="bg-rose-500 p-3 rounded-xl ml-2 shadow-sm active:scale-95"
-                            >
-                                <Ionicons name="log-out-outline" size={24} color="white" />
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                )}
+            <Text className="text-gray-400 text-sm mb-6 leading-5">
+              Masukkan email anggota keluarga yang ingin diundang untuk
+              bergabung.
+            </Text>
 
-                <View className="mb-4 bg-indigo-50 p-4 rounded-2xl border border-indigo-100 flex-row items-start">
-                    <Ionicons name="information-circle" size={20} color="#343B71" style={{ marginTop: 2 }} />
-                    <Text className="ml-3 text-indigo-900 leading-5 flex-1 text-sm">
-                        Anggota keluarga dapat melihat dan mengelola data keuangan bersama. Hanya pemilik yang dapat mengundang atau menghapus anggota.
-                    </Text>
-                </View>
+            <Text className="text-gray-500 font-bold text-xs uppercase tracking-wider mb-2">
+              Email
+            </Text>
+            <View className="bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3.5 flex-row items-center mb-8">
+              <Ionicons name="mail-outline" size={20} color="#9CA3AF" />
+              <TextInput
+                className="flex-1 ml-3 font-medium text-gray-800"
+                placeholder="alamat@email.com"
+                placeholderTextColor="#D1D5DB"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                value={inviteEmail}
+                onChangeText={setInviteEmail}
+              />
+            </View>
 
-                {/* Members List */}
-                <Text className="text-gray-400 font-bold text-xs uppercase tracking-widest mb-3 pl-1">
-                    Daftar Anggota ({members.length})
-                </Text>
-                <FlatList
-                    data={members}
-                    keyExtractor={item => item.id}
-                    renderItem={renderMember}
-                    scrollEnabled={false}
-                />
-
-                {/* Pending Invitations */}
-                {pendingInvitations.length > 0 && (
-                    <View className="mt-6">
-                        <Text className="text-gray-400 font-bold text-xs uppercase tracking-widest mb-3 pl-1">
-                            Undangan Tertunda ({pendingInvitations.length})
-                        </Text>
-                        <FlatList
-                            data={pendingInvitations}
-                            keyExtractor={item => item.id}
-                            renderItem={renderPendingInvitation}
-                            scrollEnabled={false}
-                        />
-                    </View>
-                )}
-
-                <View style={{ height: 120 }} />
-            </ScrollView>
-
-            {/* Invite Button (Admin only) */}
-            {isAdmin && (
-                <View className="absolute bottom-10 right-6 left-6">
-                    <TouchableOpacity
-                        onPress={() => setModalVisible(true)}
-                        className="bg-primary py-4 rounded-2xl flex-row items-center justify-center shadow-lg shadow-indigo-500/30"
-                    >
-                        <Ionicons name="person-add" size={20} color="white" />
-                        <Text className="text-white font-bold text-lg ml-2">Undang Anggota</Text>
-                    </TouchableOpacity>
-                </View>
-            )}
-
-            {/* Invite Modal */}
-            <Modal
-                transparent={true}
-                visible={modalVisible}
-                animationType="slide"
-                onRequestClose={() => setModalVisible(false)}
+            <TouchableOpacity
+              onPress={handleInvite}
+              disabled={isInviting}
+              className="bg-primary py-4 rounded-2xl items-center shadow-lg"
             >
-                <View className="flex-1 justify-center items-center bg-black/60 px-6">
-                    <View className="bg-white rounded-[32px] p-8 w-full shadow-2xl">
-                        <View className="flex-row justify-between items-center mb-4">
-                            <Text className="text-2xl font-bold text-gray-800">Undang Anggota</Text>
-                            <TouchableOpacity onPress={() => setModalVisible(false)} className="p-2 bg-gray-50 rounded-full">
-                                <Ionicons name="close" size={24} color="#374151" />
-                            </TouchableOpacity>
-                        </View>
-
-                        <Text className="text-gray-400 text-sm mb-6 leading-5">
-                            Masukkan email anggota keluarga yang ingin diundang untuk bergabung.
-                        </Text>
-
-                        <Text className="text-gray-500 font-bold text-xs uppercase tracking-wider mb-2">Email</Text>
-                        <View className="bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3.5 flex-row items-center mb-8">
-                            <Ionicons name="mail-outline" size={20} color="#9CA3AF" />
-                            <TextInput
-                                className="flex-1 ml-3 font-medium text-gray-800"
-                                placeholder="alamat@email.com"
-                                placeholderTextColor="#D1D5DB"
-                                keyboardType="email-address"
-                                autoCapitalize="none"
-                                value={inviteEmail}
-                                onChangeText={setInviteEmail}
-                            />
-                        </View>
-
-                        <TouchableOpacity
-                            onPress={handleInvite}
-                            disabled={isInviting}
-                            className="bg-primary py-4 rounded-2xl items-center shadow-lg"
-                        >
-                            <Text className="text-white font-bold text-lg">
-                                {isInviting ? 'Mengirim...' : 'Kirim Undangan'}
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            </Modal>
-        </SafeAreaView>
-    );
+              <Text className="text-white font-bold text-lg">
+                {isInviting ? "Mengirim..." : "Kirim Undangan"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </SafeAreaView>
+  );
 };
 
 export default MembersScreen;

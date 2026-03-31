@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Dimensions } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Alert } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { Logo } from '../components/Logo';
 
-const { width } = Dimensions.get('window');
+
 
 const RegisterScreen = ({ navigation }: any) => {
 
@@ -124,13 +124,18 @@ const RegisterScreen = ({ navigation }: any) => {
     return (
         <SafeAreaView className="flex-1 bg-[#F7F8FA]">
             <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                behavior="padding"
                 className="flex-1"
             >
-                <View className="flex-1 justify-center px-8 relative">
+                <ScrollView
+                    contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
+                    className="px-8"
+                    keyboardShouldPersistTaps="handled"
+                    showsVerticalScrollIndicator={false}
+                >
                     <TouchableOpacity
                         onPress={() => navigation.navigate('MainTabs')}
-                        className="absolute top-8 left-8 p-2 rounded-full bg-white/80 border border-gray-100 shadow-sm z-50"
+                        className="absolute top-8 left-0 p-2 rounded-full bg-white/80 border border-gray-100 shadow-sm z-50"
                     >
                         <Ionicons name="arrow-back" size={24} color="#374151" />
                     </TouchableOpacity>
@@ -219,7 +224,7 @@ const RegisterScreen = ({ navigation }: any) => {
                             </TouchableOpacity>
                         </View>
                     </View>
-                </View>
+                </ScrollView>
             </KeyboardAvoidingView>
         </SafeAreaView>
     );

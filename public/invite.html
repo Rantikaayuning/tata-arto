@@ -1,401 +1,506 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>tata arto. — Kelola Keuangan Bersama</title>
-    <meta name="description"
-        content="Undangan bergabung ke keluarga di tata arto. Aplikasi pencatatan keuangan keluarga.">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <meta
+      name="description"
+      content="Undangan bergabung ke keluarga di tata arto. Aplikasi pencatatan keuangan keluarga."
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap"
+      rel="stylesheet"
+    />
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        background: #f7f8fa;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 440px;
+        width: 100%;
+      }
+
+      .card {
+        background: #ffffff;
+        border-radius: 32px;
+        overflow: hidden;
+        box-shadow: 0 8px 40px rgba(52, 59, 113, 0.1);
+      }
+
+      .header {
+        background: linear-gradient(
+          135deg,
+          #343b71 0%,
+          #4a5296 50%,
+          #5b63a7 100%
+        );
+        padding: 48px 32px 40px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .header::before {
+        content: "";
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(
+          circle,
+          rgba(255, 255, 255, 0.05) 0%,
+          transparent 60%
+        );
+        animation: shimmer 8s ease-in-out infinite;
+      }
+
+      @keyframes shimmer {
+        0%,
+        100% {
+          transform: translate(0, 0);
         }
 
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #F7F8FA;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+        50% {
+          transform: translate(10%, 10%);
         }
+      }
 
-        .container {
-            max-width: 440px;
-            width: 100%;
-        }
+      .logo {
+        font-size: 36px;
+        font-weight: 900;
+        color: #ffffff;
+        letter-spacing: -2px;
+        position: relative;
+        z-index: 1;
+      }
 
-        .card {
-            background: #ffffff;
-            border-radius: 32px;
-            overflow: hidden;
-            box-shadow: 0 8px 40px rgba(52, 59, 113, 0.1);
-        }
+      .tagline {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 13px;
+        font-weight: 500;
+        margin-top: 8px;
+        letter-spacing: 0.5px;
+        position: relative;
+        z-index: 1;
+      }
 
-        .header {
-            background: linear-gradient(135deg, #343B71 0%, #4A5296 50%, #5B63A7 100%);
-            padding: 48px 32px 40px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
+      .content {
+        padding: 40px 32px;
+      }
 
-        .header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, transparent 60%);
-            animation: shimmer 8s ease-in-out infinite;
-        }
+      .icon-box {
+        width: 72px;
+        height: 72px;
+        background: #f0f1ff;
+        border-radius: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 36px;
+        margin: 0 auto 24px;
+      }
 
-        @keyframes shimmer {
+      .title {
+        font-size: 22px;
+        font-weight: 700;
+        color: #1f2937;
+        text-align: center;
+        margin-bottom: 12px;
+      }
 
-            0%,
-            100% {
-                transform: translate(0, 0);
-            }
+      .description {
+        font-size: 14px;
+        color: #6b7280;
+        text-align: center;
+        line-height: 1.7;
+        margin-bottom: 32px;
+      }
 
-            50% {
-                transform: translate(10%, 10%);
-            }
-        }
+      .description strong {
+        color: #343b71;
+      }
 
-        .logo {
-            font-size: 36px;
-            font-weight: 900;
-            color: #ffffff;
-            letter-spacing: -2px;
-            position: relative;
-            z-index: 1;
-        }
+      .status-box {
+        background: #ecfdf5;
+        border: 1px solid #a7f3d0;
+        border-radius: 16px;
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 24px;
+      }
 
-        .tagline {
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 13px;
-            font-weight: 500;
-            margin-top: 8px;
-            letter-spacing: 0.5px;
-            position: relative;
-            z-index: 1;
-        }
+      .status-icon {
+        font-size: 24px;
+        flex-shrink: 0;
+      }
 
-        .content {
-            padding: 40px 32px;
-        }
+      .status-text {
+        font-size: 13px;
+        color: #065f46;
+        font-weight: 500;
+        line-height: 1.5;
+      }
 
-        .icon-box {
-            width: 72px;
-            height: 72px;
-            background: #F0F1FF;
-            border-radius: 22px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 36px;
-            margin: 0 auto 24px;
-        }
+      .features {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 32px;
+      }
 
-        .title {
-            font-size: 22px;
-            font-weight: 700;
-            color: #1F2937;
-            text-align: center;
-            margin-bottom: 12px;
-        }
+      .feature {
+        background: #f9fafb;
+        border: 1px solid #f3f4f6;
+        border-radius: 16px;
+        padding: 16px;
+        text-align: center;
+      }
 
-        .description {
-            font-size: 14px;
-            color: #6B7280;
-            text-align: center;
-            line-height: 1.7;
-            margin-bottom: 32px;
-        }
+      .feature-icon {
+        font-size: 24px;
+        margin-bottom: 8px;
+      }
 
-        .description strong {
-            color: #343B71;
-        }
+      .feature-text {
+        font-size: 12px;
+        color: #6b7280;
+        font-weight: 500;
+      }
 
-        .status-box {
-            background: #ECFDF5;
-            border: 1px solid #A7F3D0;
-            border-radius: 16px;
-            padding: 16px 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 24px;
-        }
+      .download-section {
+        margin-bottom: 16px;
+      }
 
-        .status-icon {
-            font-size: 24px;
-            flex-shrink: 0;
-        }
+      .download-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #9ca3af;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        text-align: center;
+        margin-bottom: 12px;
+      }
 
-        .status-text {
-            font-size: 13px;
-            color: #065F46;
-            font-weight: 500;
-            line-height: 1.5;
-        }
+      .btn-primary {
+        display: block;
+        background: linear-gradient(135deg, #343b71 0%, #4a5296 100%);
+        color: #ffffff;
+        padding: 16px 32px;
+        border-radius: 16px;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 15px;
+        text-align: center;
+        box-shadow: 0 4px 16px rgba(52, 59, 113, 0.3);
+        transition: all 0.2s ease;
+        margin-bottom: 12px;
+        border: none;
+        cursor: pointer;
+      }
 
-        .features {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 32px;
-        }
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 24px rgba(52, 59, 113, 0.4);
+      }
 
-        .feature {
-            background: #F9FAFB;
-            border: 1px solid #F3F4F6;
-            border-radius: 16px;
-            padding: 16px;
-            text-align: center;
-        }
+      .btn-primary:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
 
-        .feature-icon {
-            font-size: 24px;
-            margin-bottom: 8px;
-        }
+      .btn-primary.coming-soon {
+        background: linear-gradient(135deg, #d1d5db 0%, #9ca3af 100%);
+        cursor: not-allowed;
+        box-shadow: 0 4px 16px rgba(107, 114, 128, 0.3);
+      }
 
-        .feature-text {
-            font-size: 12px;
-            color: #6B7280;
-            font-weight: 500;
-        }
+      .btn-primary.coming-soon:hover {
+        transform: none;
+        box-shadow: 0 4px 16px rgba(107, 114, 128, 0.3);
+      }
 
-        .download-section {
-            margin-bottom: 16px;
-        }
+      .btn-secondary {
+        display: block;
+        background: #f9fafb;
+        color: #374151;
+        padding: 14px 32px;
+        border-radius: 16px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 14px;
+        text-align: center;
+        border: 1px solid #e5e7eb;
+        transition: all 0.2s ease;
+        margin-bottom: 12px;
+      }
 
-        .download-label {
-            font-size: 11px;
-            font-weight: 700;
-            color: #9CA3AF;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            text-align: center;
-            margin-bottom: 12px;
-        }
+      .btn-secondary:hover {
+        background: #f3f4f6;
+        transform: translateY(-1px);
+      }
 
-        .btn-primary {
-            display: block;
-            background: linear-gradient(135deg, #343B71 0%, #4A5296 100%);
-            color: #ffffff;
-            padding: 16px 32px;
-            border-radius: 16px;
-            text-decoration: none;
-            font-weight: 700;
-            font-size: 15px;
-            text-align: center;
-            box-shadow: 0 4px 16px rgba(52, 59, 113, 0.3);
-            transition: all 0.2s ease;
-            margin-bottom: 12px;
-        }
+      .status-label {
+        display: inline-block;
+        background: #fef3c7;
+        color: #92400e;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-left: 8px;
+      }
 
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 24px rgba(52, 59, 113, 0.4);
-        }
+      .divider {
+        display: flex;
+        align-items: center;
+        margin: 20px 0;
+      }
 
-        .btn-secondary {
-            display: block;
-            background: #F9FAFB;
-            color: #374151;
-            padding: 14px 32px;
-            border-radius: 16px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 14px;
-            text-align: center;
-            border: 1px solid #E5E7EB;
-            transition: all 0.2s ease;
-        }
+      .divider::before,
+      .divider::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: #e5e7eb;
+      }
 
-        .btn-secondary:hover {
-            background: #F3F4F6;
-            transform: translateY(-1px);
-        }
+      .divider span {
+        padding: 0 12px;
+        font-size: 11px;
+        color: #9ca3af;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
 
-        .divider {
-            display: flex;
-            align-items: center;
-            margin: 20px 0;
-        }
+      .steps {
+        margin-bottom: 0;
+      }
 
-        .divider::before,
-        .divider::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: #E5E7EB;
-        }
+      .step {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 12px 0;
+      }
 
-        .divider span {
-            padding: 0 12px;
-            font-size: 11px;
-            color: #9CA3AF;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
+      .step:not(:last-child) {
+        border-bottom: 1px solid #f3f4f6;
+      }
 
-        .steps {
-            margin-bottom: 0;
-        }
+      .step-num {
+        width: 28px;
+        height: 28px;
+        background: #f0f1ff;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        font-weight: 700;
+        color: #343b71;
+        flex-shrink: 0;
+      }
 
-        .step {
-            display: flex;
-            align-items: flex-start;
-            gap: 14px;
-            padding: 12px 0;
-        }
+      .step-content {
+        flex: 1;
+      }
 
-        .step:not(:last-child) {
-            border-bottom: 1px solid #F3F4F6;
-        }
+      .step-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: #374151;
+      }
 
-        .step-num {
-            width: 28px;
-            height: 28px;
-            background: #F0F1FF;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 13px;
-            font-weight: 700;
-            color: #343B71;
-            flex-shrink: 0;
-        }
+      .step-desc {
+        font-size: 12px;
+        color: #9ca3af;
+        margin-top: 2px;
+      }
 
-        .step-content {
-            flex: 1;
-        }
+      .footer {
+        padding: 20px 32px;
+        border-top: 1px solid #f3f4f6;
+        text-align: center;
+      }
 
-        .step-title {
-            font-size: 13px;
-            font-weight: 600;
-            color: #374151;
-        }
-
-        .step-desc {
-            font-size: 12px;
-            color: #9CA3AF;
-            margin-top: 2px;
-        }
-
-        .footer {
-            padding: 20px 32px;
-            border-top: 1px solid #F3F4F6;
-            text-align: center;
-        }
-
-        .footer p {
-            font-size: 11px;
-            color: #D1D5DB;
-        }
+      .footer p {
+        font-size: 11px;
+        color: #d1d5db;
+      }
     </style>
-</head>
+  </head>
 
-<body>
+  <body>
     <div class="container">
-        <div class="card">
-            <!-- Header -->
-            <div class="header">
-                <div class="logo">tata arto.</div>
-                <div class="tagline">Kelola Keuangan Bersama</div>
-            </div>
-
-            <!-- Content -->
-            <div class="content">
-                <div class="icon-box">🎉</div>
-                <h1 class="title">Selamat Datang!</h1>
-                <p class="description">
-                    Anda telah diundang untuk bergabung ke keluarga di <strong>tata arto.</strong> — aplikasi pencatatan
-                    keuangan keluarga yang mudah dan menyenangkan.
-                </p>
-
-                <!-- Status -->
-                <div class="status-box">
-                    <span class="status-icon">✅</span>
-                    <span class="status-text">Akun Anda berhasil dikonfirmasi! Silakan download aplikasi untuk mulai
-                        mengelola keuangan bersama.</span>
-                </div>
-
-                <!-- Features -->
-                <div class="features">
-                    <div class="feature">
-                        <div class="feature-icon">💰</div>
-                        <div class="feature-text">Catat Pemasukan & Pengeluaran</div>
-                    </div>
-                    <div class="feature">
-                        <div class="feature-icon">👨‍👩‍👧‍👦</div>
-                        <div class="feature-text">Kelola Keuangan Keluarga</div>
-                    </div>
-                    <div class="feature">
-                        <div class="feature-icon">👛</div>
-                        <div class="feature-text">Multi Dompet & Kantong</div>
-                    </div>
-                    <div class="feature">
-                        <div class="feature-icon">📊</div>
-                        <div class="feature-text">Laporan Bulanan Lengkap</div>
-                    </div>
-                </div>
-
-                <!-- Download Buttons -->
-                <div class="download-section">
-                    <div class="download-label">Download Aplikasi</div>
-                    <a href="#" class="btn-primary" id="playStoreBtn">
-                        📱 Download di Google Play
-                    </a>
-                    <a href="#" class="btn-secondary" id="apkBtn">
-                        📦 Download APK Langsung
-                    </a>
-                </div>
-
-                <div class="divider"><span>atau</span></div>
-
-                <!-- Steps -->
-                <div class="steps">
-                    <div class="step">
-                        <div class="step-num">1</div>
-                        <div class="step-content">
-                            <div class="step-title">Download & Install Aplikasi</div>
-                            <div class="step-desc">Install tata arto. dari link di atas</div>
-                        </div>
-                    </div>
-                    <div class="step">
-                        <div class="step-num">2</div>
-                        <div class="step-content">
-                            <div class="step-title">Login dengan email ini</div>
-                            <div class="step-desc">Gunakan email yang menerima undangan</div>
-                        </div>
-                    </div>
-                    <div class="step">
-                        <div class="step-num">3</div>
-                        <div class="step-content">
-                            <div class="step-title">Otomatis bergabung 🎉</div>
-                            <div class="step-desc">Anda langsung masuk ke keluarga yang mengundang</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Footer -->
-            <div class="footer">
-                <p>© 2026 tata arto. — Kelola Keuangan Bersama</p>
-            </div>
+      <div class="card">
+        <!-- Header -->
+        <div class="header">
+          <div class="logo">tata arto.</div>
+          <div class="tagline">Kelola Keuangan Bersama</div>
         </div>
-    </div>
-</body>
 
+        <!-- Content -->
+        <div class="content">
+          <div class="icon-box">🎉</div>
+          <h1 class="title">Selamat Datang!</h1>
+          <p class="description">
+            Anda telah diundang untuk bergabung ke keluarga di
+            <strong>tata arto.</strong> — aplikasi pencatatan keuangan keluarga
+            yang mudah dan menyenangkan.
+          </p>
+
+          <!-- Status -->
+          <div class="status-box">
+            <span class="status-icon">✅</span>
+            <span class="status-text"
+              >Akun Anda berhasil dikonfirmasi! Silakan download aplikasi untuk
+              mulai mengelola keuangan bersama.</span
+            >
+          </div>
+
+          <!-- Features -->
+          <div class="features">
+            <div class="feature">
+              <div class="feature-icon">💰</div>
+              <div class="feature-text">Catat Pemasukan & Pengeluaran</div>
+            </div>
+            <div class="feature">
+              <div class="feature-icon">👨‍👩‍👧‍👦</div>
+              <div class="feature-text">Kelola Keuangan Keluarga</div>
+            </div>
+            <div class="feature">
+              <div class="feature-icon">👛</div>
+              <div class="feature-text">Multi Dompet & Kantong</div>
+            </div>
+            <div class="feature">
+              <div class="feature-icon">📊</div>
+              <div class="feature-text">Laporan Bulanan Lengkap</div>
+            </div>
+          </div>
+
+          <!-- Download Buttons -->
+          <div class="download-section">
+            <div class="download-label">Download Aplikasi</div>
+            <button
+              class="btn-primary coming-soon"
+              disabled
+              title="Segera hadir di Google Play"
+            >
+              📱 Google Play Store <span class="status-label">Coming Soon</span>
+            </button>
+            <a
+              href="https://expo.dev/artifacts/eas/YOUR_BUILD_ID"
+              class="btn-secondary"
+              id="apkBtn"
+            >
+              📦 Download APK (Testing)
+            </a>
+            <button
+              class="btn-primary coming-soon"
+              disabled
+              title="Segera hadir di App Store"
+            >
+              🍎 App Store <span class="status-label">Coming Soon</span>
+            </button>
+          </div>
+
+          <div class="divider"><span>atau</span></div>
+
+          <!-- Steps -->
+          <div class="steps">
+            <div class="step">
+              <div class="step-num">1</div>
+              <div class="step-content">
+                <div class="step-title">Download & Install Aplikasi</div>
+                <div class="step-desc">
+                  Install tata arto. dari link di atas
+                </div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">2</div>
+              <div class="step-content">
+                <div class="step-title">Login dengan email ini</div>
+                <div class="step-desc">
+                  Gunakan email yang menerima undangan
+                </div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">3</div>
+              <div class="step-content">
+                <div class="step-title">Otomatis bergabung 🎉</div>
+                <div class="step-desc">
+                  Anda langsung masuk ke keluarga yang mengundang
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+          <p>© 2026 tata arto. — Kelola Keuangan Bersama</p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Detect if app is already installed and handle deep linking
+      document.addEventListener("DOMContentLoaded", function () {
+        // Get URL parameters (for future use with deep linking)
+        const urlParams = new URLSearchParams(window.location.search);
+        const invitationId = urlParams.get("invitationId");
+        const familyId = urlParams.get("familyId");
+
+        // Try to detect if expo app is installed
+        const isAndroid = /Android/i.test(navigator.userAgent);
+        const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+        // Deep link to app if installed (for future use)
+        // const deepLink = `exp://expo.dev/--/project/tata-arto`;
+
+        // Update APK download link (placeholder - replace with actual APK URL)
+        const apkBtn = document.getElementById("apkBtn");
+        if (apkBtn) {
+          // Replace with your actual EAS build or APK hosting URL
+          apkBtn.href =
+            "https://expo.dev/accounts/YOUR_ACCOUNT/projects/tata-arto/builds";
+        }
+
+        // Optional: Add utm tracking
+        const pageSource = urlParams.get("source") || "email";
+        console.log("Invitation source:", pageSource);
+        console.log(
+          "Device:",
+          isAndroid ? "Android" : isIOS ? "iOS" : "Desktop",
+        );
+      });
+    </script>
+  </body>
 </html>

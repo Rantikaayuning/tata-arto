@@ -1,0 +1,578 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Daftar - tata arto. Kelola Keuangan Bersama</title>
+    <meta
+      name="description"
+      content="Daftar ke tata arto dan mulai kelola keuangan keluarga Anda. Download aplikasi sekarang."
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        background: linear-gradient(135deg, #f7f8fa 0%, #eef2ff 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 480px;
+        width: 100%;
+        animation: slideUp 0.6s ease-out;
+      }
+
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .card {
+        background: #ffffff;
+        border-radius: 32px;
+        overflow: hidden;
+        box-shadow: 0 8px 40px rgba(52, 59, 113, 0.08);
+        border: 1px solid rgba(52, 59, 113, 0.05);
+      }
+
+      .header {
+        background: linear-gradient(
+          135deg,
+          #343b71 0%,
+          #4a5296 50%,
+          #5b63a7 100%
+        );
+        padding: 48px 32px 40px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .header::before {
+        content: "";
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(
+          circle,
+          rgba(255, 255, 255, 0.05) 0%,
+          transparent 60%
+        );
+        animation: shimmer 8s ease-in-out infinite;
+      }
+
+      @keyframes shimmer {
+        0%,
+        100% {
+          transform: translate(0, 0);
+        }
+        50% {
+          transform: translate(10%, 10%);
+        }
+      }
+
+      .logo {
+        font-size: 36px;
+        font-weight: 900;
+        color: #ffffff;
+        letter-spacing: -2px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .tagline {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 13px;
+        font-weight: 500;
+        margin-top: 8px;
+        letter-spacing: 0.5px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .content {
+        padding: 40px 32px;
+      }
+
+      .icon-box {
+        width: 80px;
+        height: 80px;
+        background: #f0f1ff;
+        border-radius: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 40px;
+        margin: 0 auto 24px;
+        box-shadow: 0 4px 16px rgba(52, 59, 113, 0.1);
+      }
+
+      .title {
+        font-size: 26px;
+        font-weight: 800;
+        color: #1f2937;
+        text-align: center;
+        margin-bottom: 12px;
+        line-height: 1.2;
+      }
+
+      .description {
+        font-size: 14px;
+        color: #6b7280;
+        text-align: center;
+        line-height: 1.7;
+        margin-bottom: 32px;
+      }
+
+      .highlight {
+        color: #343b71;
+        font-weight: 600;
+      }
+
+      .features-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 32px;
+      }
+
+      .feature-card {
+        background: #f9fafb;
+        border: 1px solid #f3f4f6;
+        border-radius: 16px;
+        padding: 16px;
+        text-align: center;
+        transition: all 0.3s ease;
+      }
+
+      .feature-card:hover {
+        border-color: #e5e7eb;
+        background: #ffffff;
+        box-shadow: 0 4px 12px rgba(52, 59, 113, 0.05);
+      }
+
+      .feature-icon {
+        font-size: 28px;
+        margin-bottom: 8px;
+      }
+
+      .feature-label {
+        font-size: 12px;
+        color: #6b7280;
+        font-weight: 600;
+        line-height: 1.4;
+      }
+
+      .quick-start-box {
+        background: linear-gradient(135deg, #f0f1ff 0%, #eef2ff 100%);
+        border: 1px solid #c7d2fe;
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 24px;
+      }
+
+      .quick-start-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: #343b71;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 12px;
+      }
+
+      .quick-start-steps {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .quick-step {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 13px;
+        color: #4b5563;
+        font-weight: 500;
+      }
+
+      .step-dot {
+        width: 6px;
+        height: 6px;
+        background: #343b71;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+
+      .download-section {
+        margin-bottom: 16px;
+      }
+
+      .download-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #9ca3af;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        text-align: center;
+        margin-bottom: 12px;
+      }
+
+      .btn {
+        display: block;
+        padding: 16px 32px;
+        border-radius: 16px;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 15px;
+        text-align: center;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin-bottom: 12px;
+        font-family: inherit;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #343b71 0%, #4a5296 100%);
+        color: #ffffff;
+        box-shadow: 0 4px 16px rgba(52, 59, 113, 0.3);
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 24px rgba(52, 59, 113, 0.4);
+      }
+
+      .btn-primary:active {
+        transform: translateY(0);
+      }
+
+      .btn-secondary {
+        background: #f9fafb;
+        color: #374151;
+        border: 1.5px solid #e5e7eb;
+      }
+
+      .btn-secondary:hover {
+        background: #f3f4f6;
+        transform: translateY(-1px);
+      }
+
+      .btn-secondary:active {
+        transform: translateY(0);
+      }
+
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none !important;
+      }
+
+      .status-badge {
+        display: inline-block;
+        background: #fef3c7;
+        color: #92400e;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-left: 8px;
+      }
+
+      .divider {
+        display: flex;
+        align-items: center;
+        margin: 24px 0;
+        gap: 12px;
+      }
+
+      .divider::before,
+      .divider::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: #e5e7eb;
+      }
+
+      .divider span {
+        font-size: 12px;
+        color: #9ca3af;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+
+      .info-box {
+        background: #eef2ff;
+        border: 1px solid #c7d2fe;
+        border-radius: 14px;
+        padding: 16px;
+        margin-bottom: 16px;
+      }
+
+      .info-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: #312e81;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .info-text {
+        font-size: 13px;
+        color: #4b5563;
+        line-height: 1.5;
+      }
+
+      .footer {
+        padding: 20px 32px;
+        border-top: 1px solid #f3f4f6;
+        text-align: center;
+      }
+
+      .footer-text {
+        font-size: 11px;
+        color: #d1d5db;
+        line-height: 1.5;
+      }
+
+      .footer-link {
+        color: #343b71;
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      .footer-link:hover {
+        text-decoration: underline;
+      }
+
+      @media (max-width: 480px) {
+        .content {
+          padding: 32px 24px;
+        }
+
+        .title {
+          font-size: 22px;
+        }
+
+        .features-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="card">
+        <!-- Header -->
+        <div class="header">
+          <div class="logo">tata arto.</div>
+          <div class="tagline">Kelola Keuangan Bersama</div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+          <div class="icon-box">🚀</div>
+          <h1 class="title">Mulai Kelola Keuangan Keluarga</h1>
+          <p class="description">
+            Bergabunglah dengan ribuan keluarga yang sudah menggunakan
+            <span class="highlight">tata arto.</span> untuk mengelola keuangan
+            bersama dengan mudah dan transparan.
+          </p>
+
+          <!-- Features -->
+          <div class="features-grid">
+            <div class="feature-card">
+              <div class="feature-icon">💰</div>
+              <div class="feature-label">Catat Pemasukan & Pengeluaran</div>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">👨‍👩‍👧‍👦</div>
+              <div class="feature-label">Kelola Bersama Keluarga</div>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">👛</div>
+              <div class="feature-label">Multi Dompet & Kantong</div>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">📊</div>
+              <div class="feature-label">Laporan Bulanan Rinci</div>
+            </div>
+          </div>
+
+          <!-- Quick Start -->
+          <div class="quick-start-box">
+            <div class="quick-start-title">🎯 3 Langkah Mudah</div>
+            <div class="quick-start-steps">
+              <div class="quick-step">
+                <span class="step-dot"></span>
+                Download aplikasi dari tombol di bawah
+              </div>
+              <div class="quick-step">
+                <span class="step-dot"></span>
+                Buat akun atau login dengan email Anda
+              </div>
+              <div class="quick-step">
+                <span class="step-dot"></span>
+                Mulai catat keuangan keluarga 🎉
+              </div>
+            </div>
+          </div>
+
+          <!-- Info -->
+          <div class="info-box">
+            <div class="info-title">
+              <span>ℹ️</span>
+              <span>Platform Status</span>
+            </div>
+            <div class="info-text">
+              Aplikasi saat ini tersedia untuk <strong>Android</strong>.
+              Download APK testing di bawah atau tunggu rilis resmi di Play
+              Store segera.
+            </div>
+          </div>
+
+          <!-- Download Section -->
+          <div class="download-section">
+            <div class="download-label">Pilih cara download</div>
+            <a
+              href="https://expo.dev/accounts/YOUR_ACCOUNT/projects/tata-arto/builds"
+              class="btn btn-primary"
+              id="apkDownloadBtn"
+            >
+              📦 Download APK (Beta Testing)
+            </a>
+            <button
+              class="btn btn-primary"
+              style="
+                background: linear-gradient(135deg, #d1d5db 0%, #9ca3af 100%);
+                color: white;
+                cursor: not-allowed;
+              "
+              disabled
+            >
+              📱 Google Play Store <span class="status-badge">Coming Soon</span>
+            </button>
+            <button
+              class="btn btn-primary"
+              style="
+                background: linear-gradient(135deg, #d1d5db 0%, #9ca3af 100%);
+                color: white;
+                cursor: not-allowed;
+              "
+              disabled
+            >
+              🍎 App Store <span class="status-badge">Coming Soon</span>
+            </button>
+          </div>
+
+          <div class="divider">
+            <span>atau</span>
+          </div>
+
+          <!-- Expo Go Option -->
+          <div class="info-box">
+            <div class="info-title">
+              <span>⚡</span>
+              <span>Cara Tercepat</span>
+            </div>
+            <div class="info-text">
+              Install <strong>Expo Go</strong> dari Play Store, lalu scan QR
+              code untuk mencoba aplikasi langsung tanpa perlu menunggu build.
+            </div>
+          </div>
+          <a
+            href="https://play.google.com/store/apps/details?id=host.exp.exponent&hl=id"
+            class="btn btn-secondary"
+          >
+            📲 Install Expo Go dari Play Store
+          </a>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+          <p class="footer-text">
+            © 2026 <span class="footer-link">tata arto.</span> — Kelola Keuangan
+            Bersama dengan Cerdas
+          </p>
+          <p class="footer-text" style="margin-top: 8px; font-size: 10px">
+            Aplikasi ini gratis dan aman untuk keluarga Anda
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // URL parameter handling
+      document.addEventListener("DOMContentLoaded", function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        const familyId = urlParams.get("familyId");
+        const source = urlParams.get("source") || "web";
+
+        // Detect device
+        const isAndroid = /Android/i.test(navigator.userAgent);
+        const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+        const isMobile = isAndroid || isIOS;
+
+        console.log(
+          "Device:",
+          isMobile ? (isAndroid ? "Android" : "iOS") : "Desktop",
+        );
+        console.log("Source:", source);
+
+        // Update APK download link with build info
+        const apkBtn = document.getElementById("apkDownloadBtn");
+        if (apkBtn) {
+          // Replace with your actual EAS build URL
+          // Format: https://expo.dev/artifacts/eas/YOUR_BUILD_ID.apk
+          apkBtn.href =
+            "https://expo.dev/accounts/YOUR_ACCOUNT/projects/tata-arto/builds";
+
+          // Add tracking
+          apkBtn.href += "?source=" + source;
+          if (familyId) {
+            apkBtn.href += "&familyId=" + familyId;
+          }
+        }
+
+        // Optional: Auto-redirect if already using Expo Go
+        const expoGoInstalled = detectExpoGo();
+        console.log("Expo Go installed:", expoGoInstalled);
+      });
+
+      function detectExpoGo() {
+        // Check if Expo Go is installed
+        return /ExponentClient|expo/i.test(navigator.userAgent);
+      }
+    </script>
+  </body>
+</html>
