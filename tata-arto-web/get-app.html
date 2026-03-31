@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dapatkan Aplikasi - tata arto.</title>
+    <meta
+      name="description"
+      content="Download tata arto dari Play Store atau App Store dan mulai mengelola keuangan keluarga."
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        background: linear-gradient(135deg, #f7f8fa 0%, #eef2ff 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 480px;
+        width: 100%;
+        animation: slideUp 0.6s ease-out;
+      }
+
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 40px;
+      }
+
+      .logo {
+        font-size: 48px;
+        font-weight: 900;
+        background: linear-gradient(135deg, #343b71 0%, #4a5296 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 12px;
+      }
+
+      .title {
+        font-size: 28px;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 8px;
+      }
+
+      .subtitle {
+        font-size: 15px;
+        color: #9ca3af;
+        line-height: 1.5;
+      }
+
+      .card {
+        background: white;
+        border-radius: 20px;
+        padding: 32px;
+        box-shadow: 0 8px 32px rgba(52, 59, 113, 0.1);
+        margin-bottom: 24px;
+      }
+
+      .section-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 20px;
+        text-align: center;
+      }
+
+      .download-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .download-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        padding: 18px 24px;
+        border-radius: 14px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 16px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-align: center;
+      }
+
+      .download-btn.playstore {
+        background: linear-gradient(135deg, #343b71 0%, #4a5296 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(52, 59, 113, 0.3);
+      }
+
+      .download-btn.playstore:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(52, 59, 113, 0.4);
+      }
+
+      .download-btn.appstore {
+        background: #1f2937;
+        color: white;
+        box-shadow: 0 4px 12px rgba(31, 41, 55, 0.3);
+      }
+
+      .download-btn.appstore:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(31, 41, 55, 0.4);
+      }
+
+      .btn-icon {
+        font-size: 24px;
+      }
+
+      .btn-content {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .btn-label {
+        font-size: 12px;
+        opacity: 0.9;
+        font-weight: 500;
+      }
+
+      .btn-store {
+        font-size: 16px;
+        font-weight: 700;
+      }
+
+      .features-section {
+        background: #f9fafb;
+        border-radius: 16px;
+        padding: 24px;
+        margin-top: 24px;
+      }
+
+      .features-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 16px;
+        text-align: center;
+      }
+
+      .feature-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .feature-item {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+      }
+
+      .feature-icon {
+        font-size: 18px;
+        flex-shrink: 0;
+        margin-top: 2px;
+      }
+
+      .feature-text {
+        font-size: 13px;
+        color: #6b7280;
+        line-height: 1.5;
+      }
+
+      .divider {
+        height: 1px;
+        background: #e5e7eb;
+        margin: 24px 0;
+      }
+
+      .info-box {
+        background: #ecfdf5;
+        border: 1px solid #a7f3d0;
+        border-radius: 12px;
+        padding: 16px;
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        margin-top: 24px;
+      }
+
+      .info-icon {
+        font-size: 20px;
+        flex-shrink: 0;
+      }
+
+      .info-content {
+        flex: 1;
+      }
+
+      .info-title {
+        font-weight: 600;
+        color: #065f46;
+        margin-bottom: 4px;
+        font-size: 14px;
+      }
+
+      .info-text {
+        font-size: 13px;
+        color: #047857;
+        line-height: 1.5;
+      }
+
+      .footer-text {
+        text-align: center;
+        font-size: 12px;
+        color: #9ca3af;
+        margin-top: 24px;
+      }
+
+      .footer-text a {
+        color: #343b71;
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      .footer-text a:hover {
+        text-decoration: underline;
+      }
+
+      /* Responsive */
+      @media (max-width: 480px) {
+        .card {
+          padding: 24px;
+        }
+
+        .title {
+          font-size: 24px;
+        }
+
+        .logo {
+          font-size: 40px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Header -->
+      <div class="header">
+        <div class="logo">tata arto.</div>
+        <h1 class="title">Unduhan Aplikasi</h1>
+        <p class="subtitle">
+          Pilih platform untuk mengunduh aplikasi tata arto
+        </p>
+      </div>
+
+      <!-- Main Card -->
+      <div class="card">
+        <h2 class="section-title">Dapatkan Aplikasi Sekarang</h2>
+
+        <!-- Download Buttons -->
+        <div class="download-buttons">
+          <!-- Play Store Button -->
+          <button
+            class="download-btn playstore"
+            onclick="downloadFromPlayStore()"
+          >
+            <div class="btn-icon">🟢</div>
+            <div class="btn-content">
+              <span class="btn-label">Download di</span>
+              <span class="btn-store">Google Play Store</span>
+            </div>
+          </button>
+
+          <!-- App Store Button -->
+          <button
+            class="download-btn appstore"
+            onclick="downloadFromAppStore()"
+          >
+            <div class="btn-icon">⚫</div>
+            <div class="btn-content">
+              <span class="btn-label">Unduh dari</span>
+              <span class="btn-store">Apple App Store</span>
+            </div>
+          </button>
+        </div>
+
+        <!-- Features Section -->
+        <div class="features-section">
+          <h3 class="features-title">✨ Fitur Unggulan</h3>
+          <div class="feature-list">
+            <div class="feature-item">
+              <div class="feature-icon">💰</div>
+              <div class="feature-text">
+                Catat pemasukan dan pengeluaran dengan mudah
+              </div>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon">👨‍👩‍👧‍👦</div>
+              <div class="feature-text">
+                Kelola keuangan keluarga bersama-sama
+              </div>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon">👛</div>
+              <div class="feature-text">Dukungan multi dompet dan kantong</div>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon">📊</div>
+              <div class="feature-text">
+                Laporan bulanan yang rinci dan mendalam
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Info Box -->
+        <div class="info-box">
+          <div class="info-icon">ℹ️</div>
+          <div class="info-content">
+            <div class="info-title">Gratis, Tanpa Biaya Tersembunyi</div>
+            <div class="info-text">
+              tata arto sepenuhnya gratis untuk digunakan dengan semua fitur
+              yang selengkapnya.
+            </div>
+          </div>
+        </div>
+
+        <!-- Signup Alternative -->
+        <div style="margin-top: 24px; text-align: center">
+          <p style="font-size: 13px; color: #9ca3af; margin-bottom: 12px">
+            Atau jika sudah punya aplikasi
+          </p>
+          <a
+            href="./signup.html"
+            style="
+              display: inline-block;
+              padding: 12px 24px;
+              background: #f3f4f6;
+              color: #343b71;
+              text-decoration: none;
+              border-radius: 10px;
+              font-weight: 600;
+              font-size: 14px;
+              border: 1.5px solid #e5e7eb;
+              transition: all 0.2s ease;
+            "
+            onmouseover="this.style.background = '#e5e7eb'"
+            onmouseout="this.style.background = '#f3f4f6'"
+          >
+            🚀 Buat Akun & Bergabung
+          </a>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <p class="footer-text">
+        Punya pertanyaan? Lihat
+        <a href="../../public/invite.html">halaman bantuan</a> kami
+      </p>
+    </div>
+
+    <script>
+      function downloadFromPlayStore() {
+        // TODO: Link ke Google Play Store akan ditambahkan nanti
+        console.log("Redirect ke Google Play Store");
+        // Placeholder untuk sekarang
+        alert("Link Play Store akan segera tersedia");
+      }
+
+      function downloadFromAppStore() {
+        // TODO: Link ke Apple App Store akan ditambahkan nanti
+        console.log("Redirect ke Apple App Store");
+        // Placeholder untuk sekarang
+        alert("Link App Store akan segera tersedia");
+      }
+    </script>
+  </body>
+</html>
