@@ -1,5 +1,5 @@
 [build]
-  publish = "."
+  publish = "tata-arto-web"
   command = "echo 'No build needed'"
 
 [[redirects]]
