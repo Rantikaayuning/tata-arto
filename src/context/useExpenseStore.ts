@@ -468,7 +468,10 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
       };
     } else {
       // User doesn't exist - create pending invitation
-      const { data: newInvitation, error: invError } = await supabase
+      let newInvitation: any;
+      let invError: any = null;
+
+      const result = await supabase
         .from("family_invitations")
         .insert({
           family_id: familyId,
@@ -479,14 +482,51 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
         .select("id")
         .single();
 
+      newInvitation = result.data;
+      invError = result.error;
+
       if (invError) {
         if (invError.code === "23505") {
-          return {
-            success: false,
-            message: "Undangan sudah pernah dikirim ke email ini",
-          };
+          // Unique constraint violation — ini rare karena kami sudah delete existing
+          // Tapi kalau terjadi, coba lagi dengan delete dan retry
+          console.log(
+            "[inviteMember] Unique constraint, retrying dengan delete...",
+          );
+          const { error: deleteRetryErr } = await supabase
+            .from("family_invitations")
+            .delete()
+            .eq("invited_email", trimmedEmail)
+            .eq("family_id", familyId);
+
+          if (deleteRetryErr) {
+            console.error(
+              "[inviteMember] Critical: both delete and insert failed:",
+              deleteRetryErr,
+            );
+            return {
+              success: false,
+              message: "Gagal memproses undangan. Coba lagi nanti.",
+            };
+          }
+          // Kalau delete sukses, continue to retry insert di bawah
+          const { data: retryInsert, error: retryError } = await supabase
+            .from("family_invitations")
+            .insert({
+              family_id: familyId,
+              invited_email: trimmedEmail,
+              invited_by: user.id,
+              status: "pending",
+            })
+            .select("id")
+            .single();
+
+          if (retryError) {
+            return { success: false, message: retryError.message };
+          }
+          newInvitation = retryInsert;
+        } else {
+          return { success: false, message: invError.message };
         }
-        return { success: false, message: invError.message };
       }
 
       // Kirim email undangan via Supabase Edge Function

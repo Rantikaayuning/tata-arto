@@ -341,24 +341,13 @@
           </div>
         </div>
 
-        <!-- Info Box -->
-        <div class="info-box">
-          <div class="info-icon">ℹ️</div>
-          <div class="info-content">
-            <div class="info-title">Gratis, Tanpa Biaya Tersembunyi</div>
-            <div class="info-text">
-              tata arto sepenuhnya gratis untuk digunakan dengan semua fitur
-              yang selengkapnya.
-            </div>
-          </div>
-        </div>
-
         <!-- Signup Alternative -->
         <div style="margin-top: 24px; text-align: center">
           <p style="font-size: 13px; color: #9ca3af; margin-bottom: 12px">
             Atau jika sudah punya aplikasi
           </p>
           <a
+            id="signupLink"
             href="./signup.html"
             style="
               display: inline-block;
@@ -388,6 +377,28 @@
     </div>
 
     <script>
+      // Handle URL Parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      const familyId = urlParams.get("familyId");
+      const source = urlParams.get("source");
+      const invitationId = urlParams.get("invitationId");
+
+      // Update signup link dengan parameters
+      const signupLink = document.getElementById("signupLink");
+      if (familyId || invitationId) {
+        let params = new URLSearchParams();
+        if (source) params.append("source", source);
+        if (familyId) params.append("familyId", familyId);
+        if (invitationId) params.append("invitationId", invitationId);
+        signupLink.href = `./signup.html?${params.toString()}`;
+      }
+
+      // Analytics tracking (opsional)
+      if (source) {
+        console.log(`User datang dari: ${source}`);
+        if (familyId) console.log(`Akan bergabung ke keluarga: ${familyId}`);
+      }
+
       function downloadFromPlayStore() {
         // TODO: Link ke Google Play Store akan ditambahkan nanti
         console.log("Redirect ke Google Play Store");

@@ -43,17 +43,15 @@ Folder `tata-arto-web` berisi halaman web Netlify untuk tata arto yang berfungsi
 ```
 Email (Undangan)
     ↓
-User klik "Buat Akun dan Gabung"
+User klik "Download Aplikasi & Bergabung"
     ↓
-signup.html (menampilkan fitur + tombol download)
+get-app.html (pilihan download: Play Store/App Store)
     ↓
-Pilih download method
+Download aplikasi
     ↓
-download.html (instruksi install)
+User login dengan email yang diundang
     ↓
-User membuat akun + login di app
-    ↓
-Otomatis bergabung ke keluarga
+Otomatis bergabung ke keluarga ✓
 ```
 
 ### Flow 2: User Baru yang Mendaftar
@@ -82,13 +80,13 @@ Siap menggunakan app
 
 **Subject:** Undangan Bergabung ke [Nama Keluarga]
 
-**Button Text:** Buat Akun dan Gabung
+**Button Text:** 📱 Download Aplikasi & Bergabung
 
-**Link:**
+**Link:** Magic link yang mengarah ke `get-app.html?source=email&familyId=[FAMILY_ID]`
 
-```
-https://tataarto.netlify.app/signup.html?source=email&familyId=[FAMILY_ID]
-```
+**Implementation:** Menggunakan `supabase.functions.invoke("send-invitation-email")` dengan custom HTML template dan magic link
+
+**Flow:** User klik tombol → Magic link redirect ke halaman download (Play Store/App Store) → Download dan login dengan email undangan → Otomatis bergabung ke keluarga
 
 ### Untuk Verification Email
 
