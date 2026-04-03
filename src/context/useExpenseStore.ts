@@ -86,7 +86,7 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
       .from("family_invitations")
       // explicitly join the inviter to avoid profile relation conflict
       .select("*, families(name), inviter:profiles!family_invitations_invited_by_fkey(full_name)")
-      .eq("invited_email", user.email)
+      .eq("invited_email", user.email.toLowerCase())
       .eq("status", "pending");
 
     if (error) {
