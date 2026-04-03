@@ -14,7 +14,7 @@ export default function InvitationBanner() {
   const invitation = pendingInvitationsForMe[0];
   const totalInvitations = pendingInvitationsForMe.length;
 
-  const inviterName = invitation.families?.profiles?.full_name || "Seseorang";
+  const inviterName = invitation.inviter?.full_name || "Seseorang";
   const familyName = invitation.families?.name || "Keluarga";
 
   const handleAccept = async () => {

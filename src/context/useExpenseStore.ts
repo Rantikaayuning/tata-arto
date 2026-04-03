@@ -82,11 +82,17 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
     } = await supabase.auth.getUser();
     if (!user?.email) return;
 
-    const { data: invitations } = await supabase
+    const { data: invitations, error } = await supabase
       .from("family_invitations")
-      .select("*, families(name, profiles(full_name))")
+      // explicitly join the inviter to avoid profile relation conflict
+      .select("*, families(name), inviter:profiles!family_invitations_invited_by_fkey(full_name)")
       .eq("invited_email", user.email)
       .eq("status", "pending");
+
+    if (error) {
+       console.error("Error fetching pending invitations:", error);
+    }
+    console.log("Pending invitations fetched:", invitations);
 
     set({ pendingInvitationsForMe: invitations || [] });
   },
