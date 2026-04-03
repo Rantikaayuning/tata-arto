@@ -91,7 +91,7 @@ Deno.serve(async (req: Request) => {
             <p>Kelola Keuangan Bersama</p>
           </td></tr>
           <tr><td class="content">
-            <p class="greeting">Halo! 👋</p>
+            <p class="greeting" style="text-align: center;">Halo! 👋</p>
             <p class="message">${bodyMessage}</p>
             <p class="message">Dengan tata arto, Anda bisa mengelola keuangan keluarga bersama dengan lebih mudah dan terorganisir.</p>
             <div class="features">

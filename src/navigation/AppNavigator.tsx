@@ -26,7 +26,6 @@ const MainTabs = () => {
         tabBarActiveTintColor: "#343B71",
         tabBarInactiveTintColor: "#A0A3BD",
         tabBarHideOnKeyboard: true,
-        safeAreaInsets: { bottom: 0 },
         tabBarStyle: {
           height: 90,
           backgroundColor: "#FFFFFF",
