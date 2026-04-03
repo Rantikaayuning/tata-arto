@@ -11,6 +11,7 @@ export interface ExpenseState {
   user: User | null;
   members: User[];
   pendingInvitations: FamilyInvitation[];
+  pendingInvitationsForMe: any[]; // FamilyInvitation with foreign keys populated
   familyId: string | null;
   isLoading: boolean;
 
@@ -33,7 +34,9 @@ export interface ExpenseState {
   ) => Promise<{ success: boolean; message: string }>;
   removeMember: (userId: string) => Promise<void>;
   cancelInvitation: (invitationId: string) => Promise<void>;
-  checkAndAcceptInvitations: () => Promise<void>;
+  checkPendingInvitationsForMe: () => Promise<void>;
+  acceptInvitation: (invitationId: string, familyId: string) => Promise<{success: boolean; message: string}>;
+  declineInvitation: (invitationId: string) => Promise<void>;
 }
 
 const useExpenseStore = create<ExpenseState>((set, get) => ({
@@ -43,6 +46,7 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
   categories: [],
   members: [],
   pendingInvitations: [],
+  pendingInvitationsForMe: [],
   familyId: null,
   isBalanceHidden: false,
   isLoading: false,
@@ -67,11 +71,12 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
       categories: [],
       members: [],
       pendingInvitations: [],
+      pendingInvitationsForMe: [],
       familyId: null,
     });
   },
 
-  checkAndAcceptInvitations: async () => {
+  checkPendingInvitationsForMe: async () => {
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -79,24 +84,11 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
 
     const { data: invitations } = await supabase
       .from("family_invitations")
-      .select("*")
+      .select("*, families(name, profiles(full_name))")
       .eq("invited_email", user.email)
       .eq("status", "pending");
 
-    if (!invitations || invitations.length === 0) return;
-
-    for (const inv of invitations) {
-      await supabase.from("family_members").insert({
-        family_id: inv.family_id,
-        user_id: user.id,
-        role: "member",
-      });
-
-      await supabase
-        .from("family_invitations")
-        .update({ status: "accepted" })
-        .eq("id", inv.id);
-    }
+    set({ pendingInvitationsForMe: invitations || [] });
   },
 
   fetchData: async () => {
@@ -109,8 +101,8 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
       return;
     }
 
-    // Auto-accept pending invitations on login
-    await get().checkAndAcceptInvitations();
+    // Cek undangan yang pending untuk user ini (tidak otomatis accept)
+    await get().checkPendingInvitationsForMe();
 
     // Fetch profile
     const { data: profile, error: profileError } = await supabase
@@ -413,151 +405,171 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
       .eq("email", trimmedEmail)
       .single();
 
-    if (existingProfile) {
-      // User exists - add directly to family
-      const { error: memberError } = await supabase
-        .from("family_members")
-        .insert({
-          family_id: familyId,
-          user_id: existingProfile.id,
-          role: "member",
-        });
+    // Create pending invitation record
+    let newInvitation: any;
+    let invError: any = null;
 
-      if (memberError) {
-        if (memberError.code === "23505") {
-          return {
-            success: false,
-            message: "Anggota sudah terdaftar dalam keluarga ini",
-          };
-        }
-        return { success: false, message: memberError.message };
-      }
-
-      // Create accepted invitation record
-      await supabase.from("family_invitations").insert({
+    const result = await supabase
+      .from("family_invitations")
+      .insert({
         family_id: familyId,
         invited_email: trimmedEmail,
         invited_by: user.id,
-        status: "accepted",
-      });
+        status: "pending",
+      })
+      .select("id")
+      .single();
 
-      // Kirim email notifikasi ke user yang sudah terdaftar
-      try {
-        const { data: familyData } = await supabase
-          .from("families")
-          .select("name")
-          .eq("id", familyId)
+    newInvitation = result.data;
+    invError = result.error;
+
+    if (invError) {
+      if (invError.code === "23505") {
+        // Unique constraint violation — ini rare karena kami sudah delete existing
+        // Tapi kalau terjadi, coba lagi dengan delete dan retry
+        console.log(
+          "[inviteMember] Unique constraint, retrying dengan delete...",
+        );
+        const { error: deleteRetryErr } = await supabase
+          .from("family_invitations")
+          .delete()
+          .eq("invited_email", trimmedEmail)
+          .eq("family_id", familyId);
+
+        if (deleteRetryErr) {
+          console.error(
+            "[inviteMember] Critical: both delete and insert failed:",
+            deleteRetryErr,
+          );
+          return {
+            success: false,
+            message: "Gagal memproses undangan. Coba lagi nanti.",
+          };
+        }
+        // Kalau delete sukses, continue to retry insert di bawah
+        const { data: retryInsert, error: retryError } = await supabase
+          .from("family_invitations")
+          .insert({
+            family_id: familyId,
+            invited_email: trimmedEmail,
+            invited_by: user.id,
+            status: "pending",
+          })
+          .select("id")
           .single();
 
-        await supabase.functions.invoke("send-invitation-email", {
+        if (retryError) {
+          return { success: false, message: retryError.message };
+        }
+        newInvitation = retryInsert;
+      } else {
+        return { success: false, message: invError.message };
+      }
+    }
+
+    // Kirim email undangan via Supabase Edge Function (opsional, tidak blokir)
+    try {
+      const { data: familyData } = await supabase
+        .from("families")
+        .select("name")
+        .eq("id", familyId)
+        .single();
+
+      await supabase.functions.invoke(
+        "send-invitation-email",
+        {
           body: {
             to_email: trimmedEmail,
             inviter_name: user.name || "Seseorang",
             family_name: familyData?.name || "Keluarga",
-            is_existing_user: true,
+            is_existing_user: !!existingProfile,
           },
-        });
-      } catch (emailErr) {
-        console.warn("Email notifikasi gagal dikirim:", emailErr);
-      }
-
-      await get().fetchData();
-      return {
-        success: true,
-        message: `${existingProfile.full_name || trimmedEmail} berhasil ditambahkan ke keluarga`,
-      };
-    } else {
-      // User doesn't exist - create pending invitation
-      let newInvitation: any;
-      let invError: any = null;
-
-      const result = await supabase
-        .from("family_invitations")
-        .insert({
-          family_id: familyId,
-          invited_email: trimmedEmail,
-          invited_by: user.id,
-          status: "pending",
-        })
-        .select("id")
-        .single();
-
-      newInvitation = result.data;
-      invError = result.error;
-
-      if (invError) {
-        if (invError.code === "23505") {
-          // Unique constraint violation — ini rare karena kami sudah delete existing
-          // Tapi kalau terjadi, coba lagi dengan delete dan retry
-          console.log(
-            "[inviteMember] Unique constraint, retrying dengan delete...",
-          );
-          const { error: deleteRetryErr } = await supabase
-            .from("family_invitations")
-            .delete()
-            .eq("invited_email", trimmedEmail)
-            .eq("family_id", familyId);
-
-          if (deleteRetryErr) {
-            console.error(
-              "[inviteMember] Critical: both delete and insert failed:",
-              deleteRetryErr,
-            );
-            return {
-              success: false,
-              message: "Gagal memproses undangan. Coba lagi nanti.",
-            };
-          }
-          // Kalau delete sukses, continue to retry insert di bawah
-          const { data: retryInsert, error: retryError } = await supabase
-            .from("family_invitations")
-            .insert({
-              family_id: familyId,
-              invited_email: trimmedEmail,
-              invited_by: user.id,
-              status: "pending",
-            })
-            .select("id")
-            .single();
-
-          if (retryError) {
-            return { success: false, message: retryError.message };
-          }
-          newInvitation = retryInsert;
-        } else {
-          return { success: false, message: invError.message };
-        }
-      }
-
-      // Kirim email undangan via Supabase Edge Function (opsional, tidak blokir)
-      try {
-        const { data: familyData } = await supabase
-          .from("families")
-          .select("name")
-          .eq("id", familyId)
-          .single();
-
-        await supabase.functions.invoke(
-          "send-invitation-email",
-          {
-            body: {
-              to_email: trimmedEmail,
-              inviter_name: user.name || "Seseorang",
-              family_name: familyData?.name || "Keluarga",
-            },
-          },
-        );
-      } catch (emailErr) {
-        // Email gagal tapi invitation tetap tersimpan — tidak masalah
-        console.warn("[inviteMember] Email send failed (non-blocking):", emailErr);
-      }
-
-      await get().fetchData();
-      return {
-        success: true,
-        message: `Undangan untuk ${trimmedEmail} berhasil dibuat!`,
-      };
+        },
+      );
+    } catch (emailErr) {
+      // Email gagal tapi invitation tetap tersimpan — tidak masalah
+      console.warn("[inviteMember] Email send failed (non-blocking):", emailErr);
     }
+
+    await get().fetchData();
+    return {
+      success: true,
+      message: `Undangan untuk ${existingProfile?.full_name || trimmedEmail} berhasil dibuat!`,
+    };
+  },
+
+  acceptInvitation: async (invitationId: string, targetFamilyId: string) => {
+    const { user, familyId: currentFamilyId } = get();
+    if (!user) return { success: false, message: "Not logged in" };
+
+    // 1. Check if user is admin with other members
+    const { data: currentMembers } = await supabase
+      .from("family_members")
+      .select("user_id, role")
+      .eq("family_id", currentFamilyId);
+
+    const isCurrentAdmin = currentMembers?.some(m => m.user_id === user.id && m.role === 'admin');
+    const hasOtherMembers = currentMembers ? currentMembers.length > 1 : false;
+
+    if (isCurrentAdmin && hasOtherMembers) {
+      // Option B: Auto-appoint new admin
+      const otherMember = currentMembers?.find(m => m.user_id !== user.id);
+      if (otherMember) {
+        await supabase
+          .from("family_members")
+          .update({ role: 'admin' })
+          .eq("family_id", currentFamilyId)
+          .eq("user_id", otherMember.user_id);
+      }
+    }
+
+    // 2. Insert into new family
+    const { error: joinError } = await supabase
+      .from("family_members")
+      .insert({
+        family_id: targetFamilyId,
+        user_id: user.id,
+        role: "member",
+      });
+
+    if (joinError) return { success: false, message: joinError.message };
+
+    // 3. Remove membership from old family
+    await supabase
+      .from("family_members")
+      .delete()
+      .eq("family_id", currentFamilyId)
+      .eq("user_id", user.id);
+
+    // 4. Reset user data (expenses, wallets, categories)
+    // Wallets and Categories will cascade delete Expenses if set up that way,
+    // but let's delete them to be safe. Actually, expenses cascade when wallet/category deletes.
+    await supabase.from("expenses").delete().eq("user_id", user.id);
+    await supabase.from("wallets").delete().eq("user_id", user.id);
+    await supabase.from("categories").delete().eq("user_id", user.id);
+
+    // 5. Clean up old family if empty
+    if (!hasOtherMembers) {
+      await supabase.from("families").delete().eq("id", currentFamilyId);
+    }
+
+    // 6. Accept invitation
+    await supabase
+      .from("family_invitations")
+      .update({ status: "accepted" })
+      .eq("id", invitationId);
+
+    // 7. Refresh data
+    await get().fetchData();
+    return { success: true, message: "Berhasil bergabung dengan keluarga!" };
+  },
+
+  declineInvitation: async (invitationId: string) => {
+    await supabase
+      .from("family_invitations")
+      .update({ status: "declined" })
+      .eq("id", invitationId);
+    await get().checkPendingInvitationsForMe();
   },
 
   removeMember: async (userId: string) => {

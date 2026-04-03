@@ -10,6 +10,7 @@ import { isSameMonth, getYear, setYear, setMonth, format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { Expense } from '../types';
 import { Logo } from '../components/Logo';
+import InvitationBanner from '../components/InvitationBanner';
 
 const ITEM_WIDTH = 80;
 
@@ -272,6 +273,7 @@ const HomeScreen = ({ navigation }: any) => {
             <StatusBar barStyle="dark-content" backgroundColor="#F7F8FA" />
 
             <View className="flex-1">
+                <InvitationBanner />
                 {renderHeader()}
 
                 <View className="flex-1 px-4">

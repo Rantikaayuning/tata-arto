@@ -191,16 +191,7 @@ begin
   (new.id, 'Bonus', 'gift', 'income'),
   (new.id, 'Investasi', 'trending-up', 'income');
 
-  -- Auto-accept pending family invitations
-  insert into public.family_members (family_id, user_id, role)
-  select fi.family_id, new.id, 'member'
-  from public.family_invitations fi
-  where fi.invited_email = new.email and fi.status = 'pending'
-  on conflict (family_id, user_id) do nothing;
-
-  update public.family_invitations
-  set status = 'accepted'
-  where invited_email = new.email and status = 'pending';
+  -- Note: Auto-accept pending family invitations logic removed. User must manually accept.
 
   return new;
 end;

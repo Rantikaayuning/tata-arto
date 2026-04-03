@@ -69,7 +69,7 @@ Deno.serve(async (req: Request) => {
       .header h1 { margin: 0; font-size: 32px; font-weight: 900; letter-spacing: -1px; }
       .header p { margin: 8px 0 0 0; font-size: 13px; opacity: 0.85; }
       .content { padding: 40px 32px; }
-      .greeting { font-size: 18px; color: #1f2937; margin-bottom: 16px; font-weight: 700; }
+      .greeting { font-size: 18px; color: #1f2937; margin-bottom: 16px; font-weight: 700; text-align: center; }
       .message { font-size: 15px; color: #4b5563; line-height: 1.7; margin-bottom: 24px; }
       .highlight { color: #343b71; font-weight: 700; }
       .features { background: #f9fafb; border-radius: 12px; padding: 24px; margin: 24px 0; border: 1px solid #e5e7eb; }
