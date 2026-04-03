@@ -529,8 +529,7 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
         }
       }
 
-      // Kirim email undangan via Supabase Edge Function
-      let emailSent = false;
+      // Kirim email undangan via Supabase Edge Function (opsional, tidak blokir)
       try {
         const { data: familyData } = await supabase
           .from("families")
@@ -538,7 +537,7 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
           .eq("id", familyId)
           .single();
 
-        const emailResponse = await supabase.functions.invoke(
+        await supabase.functions.invoke(
           "send-invitation-email",
           {
             body: {
@@ -548,56 +547,15 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
             },
           },
         );
-
-        // Check if email function returned an error
-        if (emailResponse.error) {
-          throw emailResponse.error;
-        }
-
-        emailSent = true;
       } catch (emailErr) {
-        console.error("[inviteMember] Email send failed:", emailErr);
-        // Email gagal — hapus invitation record untuk mencegah orphaned records
-        if (newInvitation?.id) {
-          const { error: deleteErr } = await supabase
-            .from("family_invitations")
-            .delete()
-            .eq("id", newInvitation.id);
-
-          if (deleteErr) {
-            console.error(
-              "[inviteMember] Failed to clean up invitation after email failure:",
-              deleteErr,
-            );
-          }
-        }
-
-        return {
-          success: false,
-          message:
-            "Gagal mengirim email undangan. Cek email address dan coba lagi.",
-        };
-      }
-
-      if (!emailSent) {
-        // Email function returned a response but it wasn't successful
-        if (newInvitation?.id) {
-          await supabase
-            .from("family_invitations")
-            .delete()
-            .eq("id", newInvitation.id);
-        }
-        return {
-          success: false,
-          message:
-            "Gagal mengirim email undangan. Cek email address dan coba lagi.",
-        };
+        // Email gagal tapi invitation tetap tersimpan — tidak masalah
+        console.warn("[inviteMember] Email send failed (non-blocking):", emailErr);
       }
 
       await get().fetchData();
       return {
         success: true,
-        message: "Undangan terkirim! Email notifikasi telah dikirim.",
+        message: `Undangan untuk ${trimmedEmail} berhasil dibuat!`,
       };
     }
   },

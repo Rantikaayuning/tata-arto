@@ -3,6 +3,21 @@
   publish = "."
 
 [[redirects]]
+  from = "/get-app"
+  to = "/get-app.html"
+  status = 200
+
+[[redirects]]
+  from = "/signup"
+  to = "/signup.html"
+  status = 200
+
+[[redirects]]
+  from = "/download"
+  to = "/download.html"
+  status = 200
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
